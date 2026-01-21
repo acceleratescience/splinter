@@ -11,7 +11,7 @@
     keyring_dir: /etc/apt/keyrings
     docker_users:
       - "{{ ansible_user }}"
-    repo_url: "https://github.com/acceleratescience/server-infra.git"  # Or your actual repo URL
+    repo_url: "https://github.com/acceleratescience/server-infra.git"
     repo_path: "/root/server-infra"
 
   tasks:
@@ -37,7 +37,7 @@
       git:
         repo: "{{ repo_url }}"
         dest: "{{ repo_path }}"
-        version: main  # or master, depending on your branch
+        version: main
         update: yes
 
     # ==================== Docker Installation ====================
@@ -77,10 +77,10 @@
       loop: "{{ docker_users }}"
 
     # ==================== NVIDIA Driver Installation ====================
-
+    # TODO: need to add some condition that doesn't reboot if the driver is already installed
     - name: Install NVIDIA driver
       apt:
-        name: nvidia-driver-550  # Or 535, 545 depending on your needs
+        name: nvidia-driver-550
         state: present
       notify: Reboot server
 

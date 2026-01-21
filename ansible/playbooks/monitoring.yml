@@ -7,7 +7,7 @@
   become: true
   
   vars:
-    repo_path: "{{ ansible_env.HOME }}/server-infra"  # Adjust to match your repo location
+    repo_path: "{{ ansible_env.HOME }}/server-infra"
     stack_path: "{{ repo_path }}/stacks/monitoring"
   
   tasks:
