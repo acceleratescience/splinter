@@ -17,6 +17,13 @@ The server name shall be `splinter`, with each of the GPUs named after each of t
 
 Given that our first endpoint will be split across GPUs 0 and 1, it is fitting that the two strongest and most aggressive turtles should take the honors. Also, people making spelling mistakes with the names will be funny.
 
+Alternative shorter namings:
+
+- `Leon` or Leo
+- `Dona` or Donna
+- `Rafa`
+- `Mike`)
+
 ### Hogwarts
 The server name shall be `hogwarts` with each of the GPUs named after each of the houses at Hogwarts:
 - `gryffindor` (Honour, valour, loyalty)
