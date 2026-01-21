@@ -22,7 +22,7 @@ Alternative shorter namings:
 - `Leon` or Leo
 - `Dona` or Donna
 - `Rafa`
-- `Mike`)
+- `Mike`
 
 ### Hogwarts
 The server name shall be `hogwarts` with each of the GPUs named after each of the houses at Hogwarts:
