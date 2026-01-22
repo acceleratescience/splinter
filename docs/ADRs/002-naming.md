@@ -1,12 +1,13 @@
 # ADR-002. Naming conventions for the server
 
 Date: 2025-12-05
-Status: Proposed
+Status: Accepted
+Status change:
 
 ## Context
 A cool server needs a cool name. We have 4 powerful GPUs and our naming convention should match that power.
 
-## Possibilities
+We considered many possibilities, including:
 
 ### Splinter
 The server name shall be `splinter`, with each of the GPUs named after each of the Teenage Mutant Ninja Turtles:
@@ -41,8 +42,11 @@ The server name shall therefore be `jerk`, with each of the GPUs named after eac
 - `lock`
 
 ## Decision
-
-
+The server name shall be `splinter`, with each of the GPUs named after each of the Teenage Mutant Ninja Turtles. We have adapted the names to be shorter, and to be more gender inclusive:
+- `leo` (disciplined and skilled)
+- `raph` (strong and quick tempered)
+- `dona` (smart and nerdy)
+- `mike` (fun-loving)
 
 ## Consequences
 There are no real consequences.

@@ -6,19 +6,22 @@
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![GPL License][license-shield]][license-url] -->
-[![GPL License](https://img.shields.io/badge/License-GPLv3-brightgreen.svg)](https://opensource.org/licenses/)
-[![Issues](https://img.shields.io/github/issues-raw/acceleratescience/server-infra.svg?maxAge=25000)](https://github.com/acceleratescience/server-infra/issues)
-[![GitHub contributors](https://img.shields.io/github/contributors/acceleratescience/server-infra.svg?style=flat)]()
-[![GitHub pull requests](https://img.shields.io/github/issues-pr/acceleratescience/server-infra.svg?style=flat)]()
-[![PR's Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](http://makeapullrequest.com)
+[![GPL License](https://img.shields.io/badge/License-GPLv3-brightgreen.svg)](https://opensource.org/licenses/)  
+[![Issues](https://img.shields.io/github/issues-raw/acceleratescience/server-infra.svg?maxAge=25000)](https://github.com/acceleratescience/server-infra/issues)  
+[![GitHub contributors](https://img.shields.io/github/contributors/acceleratescience/server-infra.svg?style=flat)]()  
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/acceleratescience/server-infra.svg?style=flat)]()  
+[![PR's Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](http://makeapullrequest.com)  
+![Status](https://img.shields.io/badge/status-under%20development-yellow)  
 <br>
-[![GitHub stars](https://img.shields.io/github/stars/acceleratescience/server-infra.svg?style=social&label=Star)]()
-[![GitHub watchers](https://img.shields.io/github/watchers/acceleratescience/server-infra.svg?style=social&label=Watch)]()
-[![GitHub forks](https://img.shields.io/github/forks/acceleratescience/server-infra.svg?style=social&label=Fork)](https://github.com/JonSnow/MyBadges)
-[![GitHub followers](https://img.shields.io/github/followers/acceleratescience.svg?style=social&label=Follow)](https://github.com/JonSnow/MyBadges)
+[![GitHub stars](https://img.shields.io/github/stars/acceleratescience/server-infra.svg?style=social&label=Star)]()  
+[![GitHub watchers](https://img.shields.io/github/watchers/acceleratescience/server-infra.svg?style=social&label=Watch)]()  
+[![GitHub forks](https://img.shields.io/github/forks/acceleratescience/server-infra.svg?style=social&label=Fork)](https://github.com/JonSnow/MyBadges)  
+[![GitHub followers](https://img.shields.io/github/followers/acceleratescience.svg?style=social&label=Follow)](https://github.com/JonSnow/MyBadges)  
 [![Twitter Follow](https://img.shields.io/twitter/follow/AccelerateSci.svg?style=social)](https://twitter.com/AccelerateSci)
 <!-- [![LinkedIn][linkedin-shield]][linkedin-url] -->
 
+> [!WARNING]
+> This project is incomplete and under active development. The infrastructure and documentation are subject to significant changes.
 
 <!-- PROJECT LOGO -->
 <br />
@@ -48,6 +51,7 @@
 <details>
   <summary>Table of Contents</summary>
   <ol>
+    <li><a href="#introduction">Introduction</a></li>>
     <li><a href="#quick-start">Quick Start</a></li>
     <li><a href="#repository-structure">Repository Structure</a></li>
     <li><a href="#documentation">Documentation</a></li>
@@ -55,7 +59,6 @@
     <li><a href="#license">License</a></li>
   </ol>
 </details>
-
 
 
 <!---------------------------------------------------------------------------->
@@ -79,7 +82,17 @@ This repository contains the configuration, deployment scripts, and documentatio
 - **Monitoring stack** (Prometheus + Grafana + DCGM exporter)
 - **Workshop environments** (JupyterHub for training sessions)
 
-## Quick Start
+# Introduction
+
+Our research group found ourselves with a server and a dream: serve large language model endpoints to our community for free, so they could experiment with LLMs. But the path from zero to scalable, robust language model service did not seem to us to be an easy one. We were faced with questions like: What inference engine do we use? How do we manage access? How do we monitor usage? What kind of models can we supply, and how many users can we feasibly serve? How do we assess the quality of our service?
+
+We quickly noticed that this information is scattered about over blog posts, subreddits, tutorial, and technical documentation. And in trying to answer these questions, we realised that surely other people must have run into the same problems? No doubt there are pockets of researchers and small business (or even homelab enthusiasts) with their own hardware who were also grappling with the same questions.
+
+In some ways, this repo serves as a call to all those who are doing something similar: here is what we tried? How about you? To others who are in the first stages of this process, we are hoping that this will serve as a useful starting point. Within this repo, we aim to not only provide the software infrastructure to serve LLMs, but also sets of documentation acting as tutorials. Furthermore, we also offer our [Architectural Decision Records](docs/ADRs/) (ADRs), so that people can understand _why_ we made the decisions that we did.
+
+We offer this with the only caveat that many areas may be... suboptimal. If that is the case, then we are open to any well-intentioned feedback or advice in our issues. 
+
+# Quick Start
 
 1. Clone this repository
 2. Copy example files and configure for your environment:
@@ -96,7 +109,7 @@ This repository contains the configuration, deployment scripts, and documentatio
    ansible-playbook -i ansible/inventory.ini ansible/playbooks/monitoring.yml
 ```
 
-## Repository Structure
+# Repository Structure
 ```
 ansible/          # Ansible playbooks for server configuration
 docs/             # Documentation and Architecture Decision Records
@@ -104,20 +117,20 @@ scripts/          # Operational scripts (mode switching, maintenance)
 stacks/           # Docker Compose definitions for each service
 ```
 
-## Documentation
+# Documentation
 
 - [Getting Started](docs/getting-started.md) - Detailed setup instructions
 - [System Architecture](docs/system.md) - How the components fit together
 - [ADRs](docs/ADRs/) - Architecture Decision Records explaining key choices
 
-## Requirements
+# Requirements
 
 - Ubuntu 22.04 LTS (server)
 - NVIDIA GPU with recent drivers
 - Docker and Docker Compose
 - Ansible (on your local machine, for deployment)
 
-## License
+# License
 
 GNU GPLv3 - See [LICENSE](LICENSE) for details.
 
