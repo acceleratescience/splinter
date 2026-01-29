@@ -1,11 +1,11 @@
 # ADR-003. Bare metal approach
 
-Date: 2026-01-21
+Date: 2026-01-21  
 Status: Proposed
 
 ## Context
 
-The primary workload is continuous LLM inference via vLLM behind a LiteLLM proxy, monitored with Prometheus/Grafana. Secondary workloads include JupyterHub with VS Code Server for workshop participants, requiring Kubernetes orchestration.
+The primary workload is continuous LLM inference via vLLM behind a LiteLLM proxy, monitored with Prometheus/Grafana. Secondary workloads potentially include JupyterHub with VS Code Server for workshop participants, requiring Kubernetes orchestration.
 
 We evaluated Proxmox as a virtualisation layer but identified concerns:
 - GPU passthrough complexity with NVLink interconnects

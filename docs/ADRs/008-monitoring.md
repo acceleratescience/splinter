@@ -1,6 +1,6 @@
 # ADR-005. Monitoring Stack
 
-Date: YYYY-MM-DD
+Date: YYYY-MM-DD  
 Status: Proposed | Accepted | Superseded by ADR-XXX
 
 ## Context

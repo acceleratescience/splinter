@@ -1,0 +1,1 @@
+We should have at least RAID1 for backing up prometheus database

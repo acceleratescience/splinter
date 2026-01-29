@@ -1,8 +1,8 @@
 # ADR-002. Naming conventions for the server
 
-Date: 2025-12-05
-Status: Accepted
-Status change:
+Date: 2025-12-05   
+Status: Accepted  
+Status change: 2026-01-21
 
 ## Context
 A cool server needs a cool name. We have 4 powerful GPUs and our naming convention should match that power.

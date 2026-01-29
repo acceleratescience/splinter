@@ -1,7 +1,8 @@
 # ADR-001. Adopt GNU GPLv3 for Server Infrastructure Code and Documentation
 
-Date: 2025-12-03
-Status: Proposed
+Date: 2025-12-03  
+Status: Accepted  
+Status change: 2026-01-21
 
 ## Context
 We're building and documenting infrastructure for our 4x H100 NVL server, including:
