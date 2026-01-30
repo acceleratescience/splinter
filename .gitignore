@@ -3,3 +3,5 @@ inventory.ini
 *.pem
 *.key
 stacks/*/.env
+testing/
+.venv/
