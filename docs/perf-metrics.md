@@ -43,28 +43,28 @@ vLLM exposes a number of parameters and a number of bench metrics. We briefly di
 
 ### Metrics
 
-`request_rate` How many messages are being sent to the endpoint in a one second period. vLLM does not typically send all requests at once, but introduces an element of burstiness which follows a Poisson process. Ideally, we want to test our system in the worst case scenario, when all messages are sent **at once**.
+**`request_rate`** How many messages are being sent to the endpoint in a one second period. vLLM does not typically send all requests at once, but introduces an element of burstiness which follows a Poisson process. Ideally, we want to test our system in the worst case scenario, when all messages are sent **at once**.
 
-`max_concurrency` Sort of like the batch size -- how many prompts are being processed at one time.
+**`max_concurrency`** Sort of like the batch size -- how many prompts are being processed at one time.
 
-`request_throughput` How many prompts can we get through in a one second period.
+**`request_throughput`** How many prompts can we get through in a one second period.
 
-`output_throughput` How many tokens can we pump out in a one second period.
+**`output_throughput`** How many tokens can we pump out in a one second period.
 
-`ttft` The time to first token is the time it takes to start generating tokens. This is essentially the _prefill_ stage. Users will get annoyed if they have to wait a long time for this. This comes in two flavours: the mean, and the p99, a value saying that 99 percent of users got a better score than this. It represents the worse case scenario.
+**`ttft`** The time to first token is the time it takes to start generating tokens. This is essentially the _prefill_ stage. Users will get annoyed if they have to wait a long time for this. This comes in two flavours: the mean, and the p99, a value saying that 99 percent of users got a better score than this. It represents the worse case scenario.
 
-`itl` The intertoken latency is the amount of time between token generations. This also comes in mean and p99.
+**`itl`** The intertoken latency is the amount of time between token generations. This also comes in mean and p99.
 
-`tpot` The time per output token is the amount of time it takes to generate each token. This also comes in mean and p99.
+**`tpot`** The time per output token is the amount of time it takes to generate each token. This also comes in mean and p99.
 
 ### Parameters
 Here are the ones we care about:
 
-`--max-concurrency` The maximum number of prompts we're going to try and process.
+**`--max-concurrency`** The maximum number of prompts we're going to try and process.
 
-`--num-prompts` The number of prompts we send to the model. We can only ever send this number as a maximum, so it should be higher than the `--max-concurrency`, so that we don't run into an artifical ceiling
+**`--num-prompts`** The number of prompts we send to the model. We can only ever send this number as a maximum, so it should be higher than the `--max-concurrency`, so that we don't run into an artifical ceiling
 
-`--request-rate` The number of requests to send to the endpoint. We make this essentially infinite.
+**`--request-rate`** The number of requests to send to the endpoint. We make this essentially infinite.
 
 ### The sweep
 
@@ -74,15 +74,15 @@ In order to determine our limits we make four plots:
 
 #### 1. Token throughput
 
-x-axis: `max_concurrency`
-y-axis: `output_throughput`
+- x-axis: `max_concurrency`  
+- y-axis: `output_throughput`
 
 This will tell us our theoretical ceiling of how many raw tokens we can spit out the model per second.
 
 #### 2. Request throughput
 
-x-axis: `max_concurrency`
-y-axis: `request_throughput`
+- x-axis: `max_concurrency`  
+- y-axis: `request_throughput`  
 
 This will tell us our theoretical ceiling of how many raw request we can push through the model per second.
 
@@ -90,17 +90,17 @@ We can normalize these by the concurrency to get a sort of "per user" throughput
 
 #### 3. User experience -- TTFT
 
-x-axis: `max_concurrency`
-y-axis: `mean_ttft_ms`
-y-axis: `p99_ttft_ms`
+- x-axis: `max_concurrency`  
+- y-axis: `mean_ttft_ms`  
+- y-axis: `p99_ttft_ms`
 
 This will tell us at what point the prefill phase starts to impact user experience. If users are waiting longer than a few seconds, this gets to be annoying
 
 #### 4. User experience -- ITL
 
-x-axis: `max_concurrency`
-y-axis: `mean_itl_ms`
-y-axis: `p99_itl_ms`
+- x-axis: `max_concurrency`  
+- y-axis: `mean_itl_ms`  
+- y-axis: `p99_itl_ms`  
 
 This will tell us our ITL ceiling. This typically plateaus, because during decode, the GPU is doing the same work regardless of how many users are batched together. The process is:
 
@@ -143,6 +143,9 @@ Maximum concurrency for 8,128 tokens per request: 171.63x
 ```
 
 This is somewhat in line with what we're seeing in the plots -- as we get to ~200 concurrent requests, latency degrades quickly as a queue begins to form.
+
+> [!NOTE]
+> One important limitation is the length of inputs and outputs. This benchmark is simulating single short questions and answers that average ~210 tokens apiece.
 
 ### Recommendations
 
