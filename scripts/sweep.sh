@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # --- CONFIGURATION ---
-API_URL="https://ehutza9ehw1t6n-8000.proxy.runpod.net"  # Change to your endpoint
+API_URL="https://whatever-url.net"  # Change to your endpoint
 MODEL_NAME="openai/gpt-oss-120b"                         # Change to your model name
 OUTPUT_DIR="./bench_results_$(date +%Y%m%d_%H%M%S)"
 # The rates we want to test (Requests per Second)
