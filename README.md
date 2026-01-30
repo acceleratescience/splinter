@@ -51,7 +51,7 @@
 <details>
   <summary>Table of Contents</summary>
   <ol>
-    <li><a href="#introduction">Introduction</a></li>>
+    <li><a href="#introduction">Introduction</a></li>
     <li><a href="#quick-start">Quick Start</a></li>
     <li><a href="#repository-structure">Repository Structure</a></li>
     <li><a href="#documentation">Documentation</a></li>
