@@ -158,5 +158,5 @@ At these settings, we expect to comfortably serve 50-100 concurrent active users
 
 For batch requests, if the batch size is quite serious, then we should think about a separate service.
 
-[!NOTE]
-These benchmarks represent worst-case scenarios with all requests arriving simultaneously. Real-world performance will typically be better due to natural variance in request timing. We benchmark the worst case to ensure acceptable performance during usage spikes.
+> [!NOTE]
+> These benchmarks represent worst-case scenarios with all requests arriving simultaneously. Real-world performance will typically be better due to natural variance in request timing. We benchmark the worst case to ensure acceptable performance during usage spikes.
