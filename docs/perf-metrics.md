@@ -66,9 +66,67 @@ Here are the ones we care about:
 
 **`--request-rate`** The number of requests to send to the endpoint. We make this essentially infinite.
 
-### The sweep
+### Benchmark Configuration
 
-So we want to try and find our worst case scenario. So we will iterate over `--max-concurrency`. The script can be found at [link](link).
+It is impossible to benchmark "performance" without defining the shape of the data. A concurrency of 100 is trivial if the input is 5 tokens, but crushing if the input is 5,000 tokens.
+
+For this report, we simulated a "Short Q&A" workload, which reflects the average use case for a campus chatbot.
+
+* **Input Length:** on average ~200 tokens (The user's question)
+* **Output Length:** on average ~200 tokens (The model's answer)
+* **Dataset:** `ShareGPT` (sampled randomly)
+
+To replicate these results, first ensure your vLLM server is running, then run the standard vLLM benchmarking script. We wrapped this in a loop to sweep across different concurrency levels.
+
+```bash
+#!/bin/bash
+
+# --- CONFIGURATION ---
+API_URL="https://whatever.your.url.is.net"               # Change to your endpoint
+MODEL_NAME="openai/gpt-oss-120b"                         # Change to your model name, but this is what we used
+OUTPUT_DIR="./bench_results_$(date +%Y%m%d_%H%M%S)"
+# The rates we want to test (Requests per Second)
+CONCURRENCY_RATES=(16 32 64 96 128 192 256 384 512)
+# Number of prompts to send per test (Higher = more stable data)
+NUM_PROMPTS=512
+
+mkdir -p "$OUTPUT_DIR"
+
+echo "--------------------------------------------------------"
+echo "Starting Capacity Sweep against: $API_URL"
+echo "Model: $MODEL_NAME"
+echo "--------------------------------------------------------"
+
+# --- THE SWEEP LOOP ---
+for RATE in "${CONCURRENCY_RATES[@]}"; do
+    echo "Testing Concurrency: $RATE ..."
+    
+    # Run the vLLM benchmark tool
+    vllm bench serve \
+        --backend vllm \
+        --base-url "$API_URL" \
+        --model "$MODEL_NAME" \
+        --endpoint /v1/completions \
+        --dataset-name sharegpt \
+        --dataset-path ShareGPT_V3_unfiltered_cleaned_split.json \
+        --num-prompts "$NUM_PROMPTS" \
+        --max-concurrency "$RATE" \
+        --save-result \
+        --save-detailed \
+        --result-dir "$OUTPUT_DIR" \
+        --result-filename "rate_${RATE}.json"
+    
+    echo "Finished $RATE req/s. Result saved."
+    echo "--------------------------------------------------------"
+done
+
+echo "Sweep complete! Results are in $OUTPUT_DIR"
+```
+
+> [!NOTE]
+> We set `--request-rate` to `inf` (infinite). This attempts to send all `--num-prompts` immediately. This creates a "Thundering Herd" scenario, ensuring the server queue is fully saturated. This is a stress test, not a simulation of average traffic.
+
+### The sweep
 
 In order to determine our limits we make four plots:
 
