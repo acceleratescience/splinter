@@ -1,0 +1,217 @@
+---
+# LLM Service playbook - deploys vLLM, LiteLLM, PostgreSQL, and Nginx configuration
+# Run with: ansible-playbook -i inventory.ini playbooks/llm-service.yml
+
+- name: Deploy LLM service stack
+  hosts: gpu_servers
+  become: true
+
+  vars:
+    # repo_path: "{{ ansible_env.HOME }}/server-infra"
+    stack_path: "{{ repo_path }}/stacks/llm-service"
+    # repo_url: "https://github.com/acceleratescience/server-infra.git"
+    # repo_branch: main
+
+  tasks:
+    # ==================== Pre-flight Checks ====================
+    - name: Verify Docker is running
+      systemd:
+        name: docker
+        state: started
+      register: docker_status
+
+    - name: Verify NVIDIA Container Toolkit is configured
+      command: docker info --format '{{ "{{" }}.Runtimes{{ "}}" }}'
+      register: docker_runtimes
+      changed_when: false
+      failed_when: "'nvidia' not in docker_runtimes.stdout"
+
+    - name: Test GPU access in Docker
+      command: docker run --rm --gpus all nvidia/cuda:12.6.1-base-ubuntu24.04 nvidia-smi
+      register: gpu_docker_test
+      changed_when: false
+
+    - name: Display GPU Docker test result
+      debug:
+        msg: "GPU access in Docker: OK"
+      when: gpu_docker_test.rc == 0
+
+    - name: Verify Nginx is installed
+      apt:
+        name: nginx
+        state: present
+
+    # ==================== Update Repository ====================
+    - name: Pull latest changes from git
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ repo_path }}"
+        version: "{{ repo_branch }}"
+        update: yes
+      register: git_result
+
+    - name: Show if repo was updated
+      debug:
+        msg: "Repository updated: {{ git_result.changed }}"
+
+    # ==================== Validate Configuration ====================
+    - name: Check if stack directory exists
+      stat:
+        path: "{{ stack_path }}/docker-compose.yml"
+      register: compose_file
+
+    - name: Fail if stack directory not found
+      fail:
+        msg: |
+          LLM service stack not found at {{ stack_path }}
+          Make sure the repository is cloned to {{ repo_path }}
+      when: not compose_file.stat.exists
+
+    - name: Check if .env file exists
+      stat:
+        path: "{{ stack_path }}/.env"
+      register: env_file
+
+    - name: Fail if .env file not found
+      fail:
+        msg: |
+          Environment file not found at {{ stack_path }}/.env
+          
+          Create it from the example:
+            cp {{ stack_path }}/.env.example {{ stack_path }}/.env
+          
+          Then fill in the required values:
+            - POSTGRES_PASSWORD
+            - LITELLM_MASTER_KEY
+            - DOMAIN
+            - LITELLM_PORT
+      when: not env_file.stat.exists
+
+    - name: Load environment variables from .env
+      slurp:
+        src: "{{ stack_path }}/.env"
+      register: env_file_content
+
+    - name: Parse environment variables
+      set_fact:
+        env_vars: "{{ env_vars | default({}) | combine({item.split('=')[0]: item.split('=')[1]}) }}"
+      loop: "{{ (env_file_content.content | b64decode).split('\n') }}"
+      when: item | length > 0 and not item.startswith('#') and '=' in item
+
+    - name: Validate required environment variables
+      fail:
+        msg: "Required variable {{ item }} is not set in .env"
+      when: item not in env_vars or env_vars[item] | length == 0
+      loop:
+        - POSTGRES_PASSWORD
+        - LITELLM_MASTER_KEY
+        - DOMAIN
+        - LITELLM_PORT
+
+    # ==================== Configure Nginx ====================
+    - name: Generate Nginx configuration
+      shell: |
+        export $(cat {{ stack_path }}/.env | grep -v '^#' | grep -v '^$' | xargs)
+        envsubst '${DOMAIN} ${LITELLM_PORT}' < {{ stack_path }}/nginx.conf.template > /etc/nginx/sites-available/${DOMAIN}
+      args:
+        executable: /bin/bash
+
+    - name: Enable Nginx site
+      file:
+        src: "/etc/nginx/sites-available/{{ env_vars.DOMAIN }}"
+        dest: "/etc/nginx/sites-enabled/{{ env_vars.DOMAIN }}"
+        state: link
+
+    - name: Test Nginx configuration
+      command: nginx -t
+      changed_when: false
+
+    - name: Reload Nginx
+      systemd:
+        name: nginx
+        state: reloaded
+
+    # ==================== Deploy LLM Stack ====================
+    - name: Pull latest Docker images
+      community.docker.docker_compose_v2:
+        project_src: "{{ stack_path }}"
+        pull: always
+        state: present
+      register: pull_result
+
+    - name: Start LLM service stack
+      community.docker.docker_compose_v2:
+        project_src: "{{ stack_path }}"
+        state: present
+      register: compose_result
+
+    - name: Display deployed containers
+      debug:
+        var: compose_result
+
+    # ==================== Health Checks ====================
+    - name: Wait for PostgreSQL to be ready
+      community.docker.docker_container_info:
+        name: litellm-db
+      register: db_container
+      until: db_container.container.State.Health.Status == "healthy"
+      retries: 12
+      delay: 5
+
+    - name: Wait for vLLM to be ready (this may take a while for model loading)
+      command: docker exec vllm-server python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+      register: vllm_health
+      until: vllm_health.rc == 0
+      retries: 60
+      delay: 10
+      ignore_errors: true
+
+    - name: Display vLLM status
+      debug:
+        msg: "{{ 'vLLM is ready' if vllm_health.rc == 0 else 'vLLM still loading - check logs with: docker logs vllm-server' }}"
+
+    - name: Wait for LiteLLM to be ready
+      uri:
+        url: "http://127.0.0.1:{{ env_vars.LITELLM_PORT }}/health"
+        status_code: 200
+      register: litellm_health
+      until: litellm_health.status == 200
+      retries: 24
+      delay: 5
+
+    - name: Test Nginx reverse proxy
+      uri:
+        url: "http://127.0.0.1/health"
+        status_code: 200
+      register: nginx_proxy_health
+
+    # ==================== Summary ====================
+    - name: Display LLM service stack status
+      debug:
+        msg: |
+          ========================================
+          LLM Service Stack Deployed Successfully!
+          ========================================
+          
+          Services:
+            - vLLM:     http://127.0.0.1:8000 (internal only)
+            - LiteLLM:  http://127.0.0.1:{{ env_vars.LITELLM_PORT }} (internal only)
+            - API:      https://{{ env_vars.DOMAIN }}
+          
+          Health Status:
+            - PostgreSQL: healthy
+            - vLLM:       {{ 'ready' if vllm_health.rc == 0 else 'loading (check logs)' }}
+            - LiteLLM:    ready
+            - Nginx:      ready
+          
+          Next steps:
+            1. Add TLS:  sudo certbot --nginx -d {{ env_vars.DOMAIN }}
+            2. Access admin UI via SSH tunnel:
+               ssh -fN -L {{ env_vars.LITELLM_PORT }}:localhost:{{ env_vars.LITELLM_PORT }} user@{{ ansible_host }}
+               Then visit http://localhost:{{ env_vars.LITELLM_PORT }}/ui
+          
+          Useful commands:
+            - View logs:     cd {{ stack_path }} && docker compose logs -f
+            - Restart:       cd {{ stack_path }} && docker compose restart
+            - Stop:          cd {{ stack_path }} && docker compose down
+          ========================================

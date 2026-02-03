@@ -2,6 +2,14 @@ inventory.ini
 .env
 *.pem
 *.key
-stacks/*/.env
 testing/
 .venv/
+
+llm.science.ai.cam.ac.uk
+
+*.log
+
+postgres_data/
+
+.DS_Store
+Thumbs.db

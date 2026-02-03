@@ -1,0 +1,28 @@
+# =============================================================================
+# LiteLLM Configuration
+# =============================================================================
+#
+# NOTE: 
+#   Environment variables like ${LITELLM_MASTER_KEY} are passed via 
+#   docker-compose environment section, not directly in this file.
+#   This file defines model routing and general settings.
+#
+# =============================================================================
+
+model_list:
+  - model_name: gpt-oss-20b
+    litellm_params:
+      model: openai/gpt-oss-20b
+      api_base: http://vllm:8000/v1
+      api_key: "none"
+      stream: true
+
+general_settings:
+  store_model_in_db: true
+  ui_access_mode: "admin_only"
+  block_robots: true
+  disable_generic_signup: true
+
+litellm_settings:
+  drop_params: true
+  set_verbose: false
