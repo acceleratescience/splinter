@@ -1,0 +1,114 @@
+# =============================================================================
+# Nginx Configuration for LiteLLM API Gateway
+# =============================================================================
+# 
+# INSTALLATION (using envsubst to inject variables):
+#
+#   export $(cat .env | xargs)
+#   envsubst '${DOMAIN} ${LITELLM_PORT}' < nginx.conf.template > your.domain.here.com
+#   sudo cp your.domain.here.com /etc/nginx/sites-available/
+#   sudo ln -s /etc/nginx/sites-available/your.domain.here.com /etc/nginx/sites-enabled/
+#   sudo nginx -t
+#   sudo systemctl restart nginx
+#
+# THEN ADD TLS:
+#   sudo certbot --nginx -d your.domain.here.com
+#
+# =============================================================================
+
+# Rate limiting zones (safety backstop - LiteLLM handles per-user limits)
+limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
+limit_conn_zone $binary_remote_addr zone=conn_limit:10m;
+
+server {
+    listen 80;
+    server_name ${DOMAIN};
+
+    # Hide Nginx version
+    server_tokens off;
+
+    # ---------------------------------------------------------------------------
+    # Connection & Rate Limits (backstop only - firewall and LiteLLM are primary)
+    # ---------------------------------------------------------------------------
+    limit_req zone=api_limit burst=50 nodelay;
+    limit_conn conn_limit 20;
+
+    # ---------------------------------------------------------------------------
+    # Timeouts
+    # ---------------------------------------------------------------------------
+    client_body_timeout 30s;
+    client_header_timeout 10s;
+    keepalive_timeout 65s;
+    send_timeout 30s;
+
+    # ---------------------------------------------------------------------------
+    # Request Size Limits
+    # ---------------------------------------------------------------------------
+    client_max_body_size 10M;
+
+    # ---------------------------------------------------------------------------
+    # Security Headers
+    # ---------------------------------------------------------------------------
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # ---------------------------------------------------------------------------
+    # Blocked Paths
+    # ---------------------------------------------------------------------------
+    
+    # Block LiteLLM UI - admin access via SSH tunnel only
+    location /ui {
+        return 403;
+    }
+
+    # Block common attack vectors and sensitive files
+    location ~* (\.php|\.asp|\.aspx|\.jsp|\.cgi|\.env|\.git|\.sql|\.bak|\.swp) {
+        return 444;
+    }
+
+    # Block WordPress probes and similar
+    location ~* (wp-admin|wp-login|xmlrpc\.php) {
+        return 444;
+    }
+
+    # ---------------------------------------------------------------------------
+    # API Proxy (with streaming support)
+    # ---------------------------------------------------------------------------
+    location / {
+        proxy_pass http://127.0.0.1:${LITELLM_PORT};
+        
+        # Headers
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # Proxy timeouts (generous for LLM inference?)
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
+
+        # Streaming support - disable buffering
+        proxy_buffering off;
+        proxy_cache off;
+        
+        # SSE (Server-Sent Events) support
+        proxy_set_header Connection '';
+        proxy_http_version 1.1;
+        chunked_transfer_encoding off;
+    }
+
+    # ---------------------------------------------------------------------------
+    # Health Check Endpoint
+    # ---------------------------------------------------------------------------
+    location /health {
+        proxy_pass http://127.0.0.1:${LITELLM_PORT}/health;
+        proxy_set_header Host $host;
+        
+        # Tighter timeout for health checks
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 5s;
+    }
+}

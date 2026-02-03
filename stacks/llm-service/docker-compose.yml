@@ -1,0 +1,77 @@
+# =============================================================================
+# Docker Compose - LiteLLM/vLLM Stack
+# =============================================================================
+#
+# USAGE:
+#   docker compose up -d
+#
+# REQUIRES:
+#   .env file in the same directory (copy from .env.example)
+#
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Postgres
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: litellm-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # vLLM
+  # ---------------------------------------------------------------------------
+  vllm:
+    image: vllm/vllm-openai:latest
+    container_name: vllm-server
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - VLLM_MODEL=${VLLM_MODEL}
+    command: >
+      --model ${VLLM_MODEL}
+      --gpu-memory-utilization ${VLLM_GPU_MEMORY_UTILIZATION}
+
+  # ---------------------------------------------------------------------------
+  # LiteLLM
+  # ---------------------------------------------------------------------------
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: litellm-proxy
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${LITELLM_PORT}:4000"  # Make sure bound to localhost
+    depends_on:
+      db:
+        condition: service_healthy
+      vllm:
+        condition: service_started
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      NO_DOCS: "True"
+      NO_REDOCS: "True"
+    volumes:
+      - ./litellm_config.yaml:/app/config.yaml:ro
+    command: ["--config", "/app/config.yaml"]
+
+volumes:
+  postgres_data:
