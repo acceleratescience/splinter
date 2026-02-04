@@ -2,16 +2,13 @@
 # Nginx Configuration for LiteLLM API Gateway
 # =============================================================================
 # 
-# INSTALLATION (using envsubst to inject variables):
+# This file is a template. Deploy using the llm-service.sh script, which will:
+#   1. Substitute environment variables (DOMAIN, LITELLM_PORT)
+#   2. Install to /etc/nginx/sites-available/
+#   3. Create the sites-enabled symlink
+#   4. Reload Nginx
 #
-#   export $(cat .env | xargs)
-#   envsubst '${DOMAIN} ${LITELLM_PORT}' < nginx.conf.template > your.domain.here.com
-#   sudo cp your.domain.here.com /etc/nginx/sites-available/
-#   sudo ln -s /etc/nginx/sites-available/your.domain.here.com /etc/nginx/sites-enabled/
-#   sudo nginx -t
-#   sudo systemctl restart nginx
-#
-# THEN ADD TLS:
+# After running the script, add TLS with:
 #   sudo certbot --nginx -d your.domain.here.com
 #
 # =============================================================================
