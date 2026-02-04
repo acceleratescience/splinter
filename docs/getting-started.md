@@ -6,6 +6,10 @@ Here, we detail the initial setup stages. We make some basic assumptions:
 2. You have no other software installed
 3. You have Ubuntu 22.04
 
+We provide two methods of setup: **script** and **ansible**, with the prefered option being ansible.
+
+## Ansible
+
 The process is as follows:
 
 1. Connect to your server (however you do this)
@@ -18,7 +22,7 @@ The process is as follows:
 
 In the sections below, we will walk through this process in detail, assuming you have completed steps 1 and 2.
 
-## Security Keys
+### Security Keys
 
 Ansible connects to your server via SSH using key-based authentication. If you don't already have an SSH key pair, generate one on your local machine:
 
@@ -50,7 +54,7 @@ Verify the key works by disconnecting and reconnecting without a password:
 ssh -i ~/.ssh/id_ed25519 ubuntu@<server-ip>
 ```
 
-## Setting the Inventory Target
+### Setting the Inventory Target
 
 The inventory file tells Ansible which servers to manage. Copy the example file and edit it:
 
@@ -76,7 +80,7 @@ ansible gpu_servers -m ping -i ./ansible/inventory.ini
 
 The `-i` flag is required to specify the inventory file target location. If you navigate to the ansible folder, you won't need to specify this. You should see a successful pong response.
 
-## Running the Setup Playbook
+### Running the Setup Playbook
 
 The setup playbook installs Docker, the NVIDIA Container Toolkit, and other base dependencies. Before running it, ensure you have the required Ansible collections installed on your local machine:
 
@@ -92,7 +96,7 @@ ansible-playbook playbooks/setup.yml
 
 This playbook will update system packages, install Docker CE, configure the NVIDIA Container Toolkit, and verify GPU access. The process typically takes a few minutes. At the end, you should see the output of `nvidia-smi` confirming your GPU is detected.
 
-## Running the Monitoring Playbook
+### Running the Monitoring Playbook
 
 With the base setup complete, deploy the monitoring stack:
 
@@ -111,7 +115,7 @@ Once finished, you can access the monitoring interfaces:
 | Node Exporter | `http://<server-ip>:9100/metrics` | Raw system metrics |
 | DCGM Exporter | `http://<server-ip>:9400/metrics` | Raw GPU metrics |
 
-## Configuring Grafana
+### Configuring Grafana
 
 On first login to Grafana, you'll be prompted to change the admin password. After that, you need to add Prometheus as a data source:
 
@@ -134,7 +138,7 @@ Recommended dashboards:
 | Node Exporter Full | 1860 | Comprehensive system metrics |
 | NVIDIA DCGM Exporter | 12239 | GPU utilisation, memory, temperature, power |
 
-## Troubleshooting
+### Troubleshooting
 
 **Ansible can't connect to the server**
 
@@ -151,3 +155,20 @@ Ensure the NVIDIA drivers are installed and working (`nvidia-smi` should show yo
 **Grafana can't reach Prometheus**
 
 When adding the data source, use `http://prometheus:9090` (the Docker network hostname), not `localhost`. The containers communicate over the Docker bridge network.
+
+
+## Script
+
+The security process remains the same, but now we just remain inside the server and run:
+
+```bash
+./scripts/setup.sh
+```
+
+and then
+
+```bash
+./scripts/monitoring
+```
+
+Follow the same instructions in the ansible section for Grafana.
