@@ -1,5 +1,22 @@
 # LLM Inference Service
 
+## Contents
+
+- [Introduction](#introduction)
+  - [Architecture Overview](#architecture-overview)
+  - [Why This Stack?](#why-this-stack)
+  - [Why the double reverse proxy?](#why-the-double-reverse-proxy)
+  - [What End Users See](#what-end-users-see)
+- [Prerequisites](#prerequisites)
+- [Security Considerations](#security-considerations)
+- [Component Setup](#component-setup)
+  - [Nginx Configuration](#nginx-configuration)
+  - [LiteLLM Configuration](#litellm-configuration)
+  - [The docker compose file](#the-docker-compose-file)
+  - [The launch script](#the-launch-script)
+
+---
+
 ## Introduction
 
 This guide walks through the setup of the LLM Inference Service, a multi-user platform for serving large language models to researchers. The service uses a layered architecture designed for security, scalability, and manageability.
@@ -554,19 +571,18 @@ docker compose up -d
 ```
 This final section validates the Nginx config with nginx -t (which catches syntax errors before you break anything), then reloads Nginx to apply the changes without dropping existing connections. Finally, it starts the Docker stack in detached mode. Because of set -e at the top, if the Nginx test fails, the script stops and won't start the Docker containers with a broken config. And then of course we run the final `up` command.
 
+## Maybe put all below in seperate section
+
 ## User Management
 
 ### Creating API Keys
 
-*[Section to be completed: How to create and manage API keys via LiteLLM]*
 
 ### Organising Teams
 
-*[Section to be completed: Setting up teams for projects, departments, or workshops]*
 
 ### Setting Rate Limits
 
-*[Section to be completed: Configuring per-user and per-team rate limits]*
 
 ---
 
@@ -574,15 +590,12 @@ This final section validates the Nginx config with nginx -t (which catches synta
 
 ### Usage Statistics
 
-*[Section to be completed: Accessing and interpreting usage data]*
 
 ### Log Management
 
-*[Section to be completed: Log locations and rotation]*
 
 ### Troubleshooting
 
-*[Section to be completed: Common issues and solutions]*
 
 ---
 
