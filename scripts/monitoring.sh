@@ -48,8 +48,8 @@ fi
 echo "      NVIDIA runtime: OK"
 
 # Test GPU access
-if ! docker run --rm --gpus all nvidia/cuda:12.6.1-base-ubuntu24.04 nvidia-smi > /dev/null 2>&1; then
-    echo "ERROR: Cannot access GPU from Docker"
+if ! command -v nvidia-smi &> /dev/null || ! nvidia-smi > /dev/null 2>&1; then
+    echo "ERROR: Cannot access GPU (nvidia-smi failed)"
     exit 1
 fi
 echo "      GPU access: OK"
@@ -110,31 +110,24 @@ else
     echo "      DCGM Exporter: FAILED"
 fi
 
-# ==================== Summary ====================
 echo ""
 echo "=========================================="
 echo "Monitoring Stack Deployed Successfully!"
 echo "=========================================="
 echo ""
-echo "Services:"
-echo "  - Prometheus:    http://localhost:9090"
+echo "Security Note:"
+echo "  All services are bound to 127.0.0.1 for security."
+echo "  To access them from your laptop, use an SSH tunnel:"
+echo "  ssh -L 3000:localhost:3000 user@$(hostname -I | awk '{print $1}')"
+echo ""
+echo "Services (via tunnel):"
 echo "  - Grafana:       http://localhost:3000"
-echo "  - Node Exporter: http://localhost:9100/metrics"
-echo "  - DCGM Exporter: http://localhost:9400/metrics"
+echo "  - Prometheus:    http://localhost:9090"
 echo ""
-echo "Grafana default credentials:"
-echo "  Username: admin"
-echo "  Password: admin"
+echo "Grafana default credentials: admin / admin"
 echo ""
-echo "Next steps:"
-echo "  1. Login to Grafana"
-echo "  2. Add Prometheus as data source (URL: http://prometheus:9090)"
-echo "  3. Import dashboards:"
-echo "     - Node Exporter: 1860"
-echo "     - NVIDIA DCGM: 12239"
-echo ""
-echo "Useful commands:"
-echo "  View logs:     cd ${STACK_DIR} && docker compose logs -f"
-echo "  Stop stack:    cd ${STACK_DIR} && docker compose down"
-echo "  Restart:       cd ${STACK_DIR} && docker compose restart"
+echo "Next steps in Grafana:"
+echo "  1. Add Data Source -> Prometheus"
+echo "  2. URL: http://prometheus:9090  <-- (Use internal Docker DNS)"
+echo "  3. Import Dashboards: 1860 (Node), 12239 (GPU)"
 echo ""

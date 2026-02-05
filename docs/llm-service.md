@@ -21,6 +21,23 @@
 
 This guide walks through the setup of the LLM Inference Service, a multi-user platform for serving large language models to researchers. The service uses a layered architecture designed for security, scalability, and manageability.
 
+### File Structure
+All files relevant to this section can be found in the following locations in the tree:
+```
+splinter/
+├── ansible/
+│   └── playbooks/
+│       └── llm-service.yml
+├── scripts/
+│   └── llm-service.sh
+└── stacks/
+    └── llm-service/
+        ├── .env.example
+        ├── docker-compose.yml
+        ├── litellm_config.yaml
+        └── nginx.conf.template
+```
+
 ### Architecture Overview
 
 ```mermaid
@@ -370,7 +387,7 @@ So that's quite a lot of information.
 
 ### LiteLLM Configuration
 
-Now let's look at the LiteLLM configuration. Mercifully, this is shorter.
+Now let's look at the [LiteLLM configuration](../stacks/llm-service/litellm_config.yaml). Mercifully, this is shorter.
 
 ```yaml
 model_list:
