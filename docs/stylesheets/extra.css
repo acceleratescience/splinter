@@ -1,0 +1,20 @@
+.md-sidebar--primary {
+  width: 8rem;
+}
+
+.md-sidebar--primary .md-sidebar__scrollwrap {
+  width: 8rem;
+}
+
+/* Maximum space for text block */
+.md-grid {
+  max-width: 95%; /* or 100%, if you want to stretch to full-width */
+}
+
+/* .glightbox-clean .gslide-image img {
+  max-width: 95vw;
+  max-height: 95vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+} */
