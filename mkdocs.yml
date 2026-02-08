@@ -5,8 +5,8 @@ nav:
   - Getting Started: getting-started.md
   - Setup: setup.md
   - Guides:
-    - LLM Service: llm-service.md
-    - Monitoring: monitoring.md
+    - LLM Service: stacks/llm-service.md
+    - Monitoring: stacks/monitoring.md
     - Server Security: server-security.md
   - Reference:
     - System: system.md

@@ -26,12 +26,8 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://acceleratescience.github.io/">
-    <img src="./docs/assets/imgs/splinter_.png" alt="Logo" height=70 style="vertical-align: middle;">
-  </a>
-  &nbsp;&nbsp;&nbsp;
-  <a href="https://acceleratescience.github.io/">
-    <img src="./docs/assets/imgs/full_acc.png" alt="Logo" height=50 style="vertical-align: middle;">
+  <a>
+    <img src="./docs/assets/imgs/splinter_2.png" alt="Logo" height=100 style="vertical-align: middle;">
   </a>
 
   <h3 align="center">Accelerate Science GPU Server Infrastructure</h3>
