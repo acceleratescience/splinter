@@ -7,9 +7,9 @@
   become: true
 
   vars:
-    # repo_path: "{{ ansible_env.HOME }}/server-infra"
+    # repo_path: "{{ ansible_env.HOME }}/splinter"
     stack_path: "{{ repo_path }}/stacks/llm-service"
-    # repo_url: "https://github.com/acceleratescience/server-infra.git"
+    # repo_url: "https://github.com/acceleratescience/splinter.git"
     # repo_branch: main
 
   tasks:
