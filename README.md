@@ -7,15 +7,15 @@
 [![Issues][issues-shield]][issues-url]
 [![GPL License][license-shield]][license-url] -->
 [![GPL License](https://img.shields.io/badge/License-GPLv3-brightgreen.svg)](https://opensource.org/licenses/)
-[![Issues](https://img.shields.io/github/issues-raw/acceleratescience/server-infra.svg?maxAge=25000)](https://github.com/acceleratescience/server-infra/issues)
-[![GitHub contributors](https://img.shields.io/github/contributors/acceleratescience/server-infra.svg?style=flat)]()
-[![GitHub pull requests](https://img.shields.io/github/issues-pr/acceleratescience/server-infra.svg?style=flat)]()
+[![Issues](https://img.shields.io/github/issues-raw/acceleratescience/splinter.svg?maxAge=25000)](https://github.com/acceleratescience/splinter/issues)
+[![GitHub contributors](https://img.shields.io/github/contributors/acceleratescience/splinter.svg?style=flat)]()
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/acceleratescience/splinter.svg?style=flat)]()
 [![PR's Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)](http://makeapullrequest.com)
 ![Status](https://img.shields.io/badge/status-under%20development-yellow)
 <br>
-[![GitHub stars](https://img.shields.io/github/stars/acceleratescience/server-infra.svg?style=social&label=Star)]()
-[![GitHub watchers](https://img.shields.io/github/watchers/acceleratescience/server-infra.svg?style=social&label=Watch)]()
-[![GitHub forks](https://img.shields.io/github/forks/acceleratescience/server-infra.svg?style=social&label=Fork)](https://github.com/JonSnow/MyBadges)
+[![GitHub stars](https://img.shields.io/github/stars/acceleratescience/splinter.svg?style=social&label=Star)]()
+[![GitHub watchers](https://img.shields.io/github/watchers/acceleratescience/splinter.svg?style=social&label=Watch)]()
+[![GitHub forks](https://img.shields.io/github/forks/acceleratescience/splinter.svg?style=social&label=Fork)](https://github.com/JonSnow/MyBadges)
 [![GitHub followers](https://img.shields.io/github/followers/acceleratescience.svg?style=social&label=Follow)](https://github.com/JonSnow/MyBadges)
 [![Twitter Follow](https://img.shields.io/twitter/follow/AccelerateSci.svg?style=social)](https://twitter.com/AccelerateSci)
 <!-- [![LinkedIn][linkedin-shield]][linkedin-url] -->
@@ -39,9 +39,9 @@
     <!-- <a href="https://acceleratescience.github.io/diffusion-models/" style="font-size: 20px; text-decoration: none"><strong>Start »</strong></a>
     <br />
     <br /> -->
-    <a href="https://github.com/acceleratescience/large-language-models/issues">Report Bug</a>
+    <a href="https://github.com/acceleratescience/splinter/issues">Report Bug</a>
     ·
-    <a href="https://github.com/acceleratescience/large-language-models/issues">Request Feature</a>
+    <a href="https://github.com/acceleratescience/splinter/issues">Request Feature</a>
     <br />
   </p>
 </div>
@@ -136,16 +136,16 @@ GNU GPLv3 - See [LICENSE](LICENSE) for details.
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/acceleratescience/server-infra.svg?style=for-the-badge
-[contributors-url]: https://github.com/acceleratescience/server-infra/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/acceleratescience/server-infra.svg?style=for-the-badge
-[forks-url]: https://github.com/acceleratescience/server-infra/network/members
-[stars-shield]: https://img.shields.io/github/stars/acceleratescience/server-infra.svg?style=for-the-badge
-[stars-url]: https://github.com/acceleratescience/server-infra/stargazers
-[issues-shield]: https://img.shields.io/github/issues/acceleratescience/server-infra.svg?style=for-the-badge
-[issues-url]: https://github.com/acceleratescience/server-infra/issues
-[license-shield]: https://img.shields.io/github/license/acceleratescience/server-infra.svg?style=for-the-badge
-[license-url]: https://github.com/acceleratescience/server-infra/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/acceleratescience/splinter.svg?style=for-the-badge
+[contributors-url]: https://github.com/acceleratescience/splinter/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/acceleratescience/splinter.svg?style=for-the-badge
+[forks-url]: https://github.com/acceleratescience/splinter/network/members
+[stars-shield]: https://img.shields.io/github/stars/acceleratescience/splinter.svg?style=for-the-badge
+[stars-url]: https://github.com/acceleratescience/splinter/stargazers
+[issues-shield]: https://img.shields.io/github/issues/acceleratescience/splinter.svg?style=for-the-badge
+[issues-url]: https://github.com/acceleratescience/splinter/issues
+[license-shield]: https://img.shields.io/github/license/acceleratescience/splinter.svg?style=for-the-badge
+[license-url]: https://github.com/acceleratescience/splinter/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/company/accelerate-programme-for-scientific-discovery/
 [product-screenshot]: images/screenshot.png
