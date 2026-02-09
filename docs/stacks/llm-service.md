@@ -1,22 +1,5 @@
 # LLM Inference Service
 
-## Contents
-
-- [Introduction](#introduction)
-  - [Architecture Overview](#architecture-overview)
-  - [Why This Stack?](#why-this-stack)
-  - [Why the double reverse proxy?](#why-the-double-reverse-proxy)
-  - [What End Users See](#what-end-users-see)
-- [Prerequisites](#prerequisites)
-- [Security Considerations](#security-considerations)
-- [Component Setup](#component-setup)
-  - [Nginx Configuration](#nginx-configuration)
-  - [LiteLLM Configuration](#litellm-configuration)
-  - [The docker compose file](#the-docker-compose-file)
-  - [The launch script](#the-launch-script)
-
----
-
 ## Introduction
 
 This guide walks through the setup of the LLM Inference Service, a multi-user platform for serving large language models to researchers. The service uses a layered architecture designed for security, scalability, and manageability.
@@ -40,55 +23,7 @@ splinter/
 
 ### Architecture Overview
 
-```mermaid
-flowchart BT
-    subgraph Internet
-        User[/"👤 Researcher"/]
-    end
-
-    subgraph Server
-        subgraph Nginx["Nginx"]
-            N1["SSL/TLS termination"]
-            N2["Rate limiting"]
-            N3["Path-based access control"]
-            N4["Request filtering"]
-        end
-
-        subgraph LiteLLM["LiteLLM"]
-            L1["API key management"]
-            L2["User/team organisation"]
-            L3["Usage tracking"]
-            L4["Model routing"]
-        end
-
-        subgraph vLLM["vLLM"]
-            V1["Model inference"]
-            V2["Batching and scheduling"]
-            V3["GPU memory management"]
-        end
-    end
-
-    User -->|"HTTPS request"| Nginx
-    Nginx -->|"HTTPS response"| User
-    Nginx -->|"Authenticated request"| LiteLLM
-    LiteLLM -->|"Response"| Nginx
-    LiteLLM -->|"Inference request"| vLLM
-    vLLM -->|"Response"| LiteLLM
-
-    %% Requests in blue
-    linkStyle 0,2,4 stroke:#3b82f6,stroke-width:2px
-    %% Responses in slate
-    linkStyle 1,3,5 stroke:#64748b,stroke-width:2px
-
-    %% Nginx - security/gateway (slate)
-    style Nginx fill:#e2e8f0,stroke:#64748b,color:#000
-
-    %% LiteLLM - orchestration (blue)
-    style LiteLLM fill:#dbeafe,stroke:#3b82f6,color:#000
-
-    %% vLLM - GPU compute (purple)
-    style vLLM fill:#e9d5ff,stroke:#9333ea,color:#000
-```
+![LLM Service Architecture](assets/imgs/llm-service-arch.png)
 
 ### Why This Stack?
 
