@@ -1,13 +1,13 @@
 ---
 # Monitoring playbook - deploys Prometheus, Grafana, node-exporter, and dcgm-exporter
-# Run with: ansible-playbook -i inventory.ini playbooks/monitoring.yml
+# Run with: ansible-playbook -i ansible/inventory.ini playbooks/monitoring.yml
 
 - name: Deploy monitoring stack
   hosts: gpu_servers
   become: true
   
   vars:
-    repo_path: "{{ ansible_env.HOME }}/server-infra"
+    repo_path: "{{ ansible_env.HOME }}/splinter"
     stack_path: "{{ repo_path }}/stacks/monitoring"
   
   tasks:
