@@ -29,8 +29,8 @@ We also check that we are running as root.
 DOCKER_USERS="${DOCKER_USERS:-ubuntu}"  # Comma-separated list, or set via env var
 NVIDIA_DRIVER_VERSION="550"
 KEYRING_DIR="/etc/apt/keyrings"
-REPO_URL="https://github.com/acceleratescience/server-infra.git"
-REPO_PATH="/root/server-infra"
+REPO_URL="https://github.com/acceleratescience/splinter.git"
+REPO_PATH="/root/splinter"
 
 # Detect architecture
 ARCH=$(dpkg --print-architecture)
@@ -71,7 +71,7 @@ This section just installs some simple base dependencies. Many of these will alr
 ```bash
 # ==================== Clone Repository ====================
 echo ""
-echo "[2/7] Cloning server infrastructure repository..."
+echo "[2/7] Cloning server infrastructure (Splinter) repository..."
 if [ -d "${REPO_PATH}" ]; then
     cd "${REPO_PATH}"
     git pull
