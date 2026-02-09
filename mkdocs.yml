@@ -1,0 +1,128 @@
+site_name: "Splinter: GPU Infrastructure for Scientific Discovery"
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Setup: setup.md
+  - Guides:
+    - LLM Service: stacks/llm-service.md
+    - Monitoring: stacks/monitoring.md
+    - Server Security: server-security.md
+  - Reference:
+    - System: system.md
+    - Performance Metrics: perf-metrics.md
+    - Fair Use Policy: fair-use-policy.md
+  - ADRs:
+    - 001. License: ADRs/001-license.md
+    - 002. Naming: ADRs/002-naming.md
+    - 003. LLM Service: ADRs/003-llm-service.md
+    - 004. Metrics: ADRs/004-metrics.md
+    - 005. Access: ADRs/005-access.md
+    - LLM Service (2): ADRs/006-llm-service.md
+    - 007. Backup: ADRs/007-backup.md
+    - 008. Monitoring: ADRs/008-monitoring.md
+    - 009. Bare Metal: ADRs/009-bare-metal.md
+    - 010. Fair Use: ADRs/010-fair-use.md
+
+theme:
+  favicon: assets/imgs/trace.svg
+  name: material
+  logo: assets/imgs/trace.svg
+  # custom_dir: overrides
+  features:
+    - search.suggest
+    - search.highlight
+    - announce.dismiss
+    - content.code.annotate
+    - content.code.copy
+    # - content.code.select
+    # - content.footnote.tooltips
+    - content.tabs.link
+    - content.tooltips
+    # - header.autohide
+    # - navigation.expand
+    - navigation.footer
+    - navigation.indexes
+    # - navigation.instant
+    # - navigation.instant.prefetch
+    # - navigation.instant.progress
+    # - navigation.prune
+    # - navigation.sections
+    - navigation.tabs
+    # - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    # - toc.integrate
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/link
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch-off
+        name: Switch to system preference
+  font:
+    text: Roboto
+    code: Roboto Mono
+  icon:
+    annotation: material/chevron-right-circle 
+plugins:
+  - search
+  - glightbox:
+      width: 200%
+      height: auto
+      zoomable: true
+      draggable: true
+extra_css:
+#   - https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css
+#   - assets/css/custom.css
+  - stylesheets/extra.css
+#   - stylesheets/consent.css
+extra_javascript:
+  - https://unpkg.com/mermaid/dist/mermaid.min.js
+#   - javascripts/custom-consent.js
+#   - https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js
+#   - assets/js/custom.js
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - tables
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      options:
+        custom_icons:
+          - overrides/.icons
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+copyright: >
+  Copyright &copy; 2025 Accelerate Programme for Scientific Discovery –
+  <a href="#__consent">Change cookie settings</a>
+
+watch:
+  - docs
