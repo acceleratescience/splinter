@@ -25,8 +25,8 @@ fi
 DOCKER_USERS="${DOCKER_USERS:-ubuntu}"  # Comma-separated list, or set via env var
 NVIDIA_DRIVER_VERSION="550"
 KEYRING_DIR="/etc/apt/keyrings"
-REPO_URL="https://github.com/acceleratescience/server-infra.git"
-REPO_PATH="/root/server-infra"
+REPO_URL="https://github.com/acceleratescience/splinter.git"
+REPO_PATH="/root/splinter"
 
 # Detect architecture
 ARCH=$(dpkg --print-architecture)
@@ -54,7 +54,7 @@ apt-get install -y \
 
 # ==================== Clone Repository ====================
 echo ""
-echo "[2/7] Cloning server infrastructure repository..."
+echo "[2/7] Cloning server infrastructure (Splinter) repository..."
 if [ -d "${REPO_PATH}" ]; then
     cd "${REPO_PATH}"
     git pull

@@ -11,8 +11,8 @@
     keyring_dir: /etc/apt/keyrings
     docker_users:
       - "{{ ansible_user }}"
-    repo_url: "https://github.com/acceleratescience/server-infra.git"
-    repo_path: "/root/server-infra"
+    repo_url: "https://github.com/acceleratescience/splinter.git"
+    repo_path: "/root/splinter"
 
   tasks:
     # ==================== System Updates ====================
