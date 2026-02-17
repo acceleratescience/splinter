@@ -7,10 +7,7 @@
   become: true
 
   vars:
-    # repo_path: "{{ ansible_env.HOME }}/splinter"
     stack_path: "{{ repo_path }}/stacks/llm-service"
-    # repo_url: "https://github.com/acceleratescience/splinter.git"
-    # repo_branch: main
 
   tasks:
     # ==================== Pre-flight Checks ====================
@@ -36,10 +33,14 @@
         msg: "GPU access in Docker: OK"
       when: gpu_docker_test.rc == 0
 
-    - name: Verify Nginx is installed
+    # ==================== Install Dependencies ====================
+    - name: Install Nginx and fail2ban
       apt:
-        name: nginx
+        name:
+          - nginx
+          - fail2ban
         state: present
+        update_cache: yes
 
     # ==================== Update Repository ====================
     - name: Pull latest changes from git
@@ -76,10 +77,10 @@
       fail:
         msg: |
           Environment file not found at {{ stack_path }}/.env
-          
+
           Create it from the example:
             cp {{ stack_path }}/.env.example {{ stack_path }}/.env
-          
+
           Then fill in the required values:
             - POSTGRES_PASSWORD
             - LITELLM_MASTER_KEY
@@ -94,7 +95,10 @@
 
     - name: Parse environment variables
       set_fact:
-        env_vars: "{{ env_vars | default({}) | combine({item.split('=')[0]: item.split('=')[1]}) }}"
+        env_vars: >-
+          {{ env_vars | default({}) | combine({
+            item.split('=', 1)[0]: item.split('=', 1)[1]
+          }) }}
       loop: "{{ (env_file_content.content | b64decode).split('\n') }}"
       when: item | length > 0 and not item.startswith('#') and '=' in item
 
@@ -109,6 +113,23 @@
         - LITELLM_PORT
 
     # ==================== Configure Nginx ====================
+    - name: Create Nginx snippets directory
+      file:
+        path: /etc/nginx/snippets
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Install security snippet
+      copy:
+        src: "{{ stack_path }}/security.conf.template"
+        dest: /etc/nginx/snippets/llm-security.conf
+        remote_src: yes
+        owner: root
+        group: root
+        mode: "0644"
+
     - name: Generate Nginx configuration
       shell: |
         export $(cat {{ stack_path }}/.env | grep -v '^#' | grep -v '^$' | xargs)
@@ -122,6 +143,11 @@
         dest: "/etc/nginx/sites-enabled/{{ env_vars.DOMAIN }}"
         state: link
 
+    - name: Remove default Nginx site
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
     - name: Test Nginx configuration
       command: nginx -t
       changed_when: false
@@ -130,6 +156,34 @@
       systemd:
         name: nginx
         state: reloaded
+
+    # ==================== Configure Fail2ban ====================
+    - name: Install fail2ban jail configuration
+      copy:
+        src: "{{ stack_path }}/fail2ban-jail.local"
+        dest: /etc/fail2ban/jail.local
+        remote_src: yes
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Install fail2ban filters
+      copy:
+        src: "{{ stack_path }}/filters/{{ item }}"
+        dest: /etc/fail2ban/filter.d/{{ item }}
+        remote_src: yes
+        owner: root
+        group: root
+        mode: "0644"
+      loop:
+        - nginx-llm-blocked.conf
+        - nginx-llm-auth.conf
+
+    - name: Enable and restart fail2ban
+      systemd:
+        name: fail2ban
+        state: restarted
+        enabled: yes
 
     # ==================== Deploy LLM Stack ====================
     - name: Pull latest Docker images
@@ -179,10 +233,10 @@
       retries: 24
       delay: 5
 
-    - name: Test Nginx reverse proxy
+    - name: Test Nginx reverse proxy (expects 401 - confirms Nginx is proxying and auth is enforced)
       uri:
         url: "http://127.0.0.1/health"
-        status_code: 200
+        status_code: 401
       register: nginx_proxy_health
 
     # ==================== Summary ====================
@@ -192,24 +246,25 @@
           ========================================
           LLM Service Stack Deployed Successfully!
           ========================================
-          
+
           Services:
             - vLLM:     http://127.0.0.1:8000 (internal only)
             - LiteLLM:  http://127.0.0.1:{{ env_vars.LITELLM_PORT }} (internal only)
             - API:      https://{{ env_vars.DOMAIN }}
-          
+
           Health Status:
             - PostgreSQL: healthy
             - vLLM:       {{ 'ready' if vllm_health.rc == 0 else 'loading (check logs)' }}
             - LiteLLM:    ready
-            - Nginx:      ready
-          
+            - Nginx:      ready (auth enforced)
+            - Fail2ban:   active
+
           Next steps:
             1. Add TLS:  sudo certbot --nginx -d {{ env_vars.DOMAIN }}
             2. Access admin UI via SSH tunnel:
                ssh -fN -L {{ env_vars.LITELLM_PORT }}:localhost:{{ env_vars.LITELLM_PORT }} user@{{ ansible_host }}
                Then visit http://localhost:{{ env_vars.LITELLM_PORT }}/ui
-          
+
           Useful commands:
             - View logs:     cd {{ stack_path }} && docker compose logs -f
             - Restart:       cd {{ stack_path }} && docker compose restart

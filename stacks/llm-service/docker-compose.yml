@@ -49,6 +49,17 @@ services:
     command: >
       --model ${VLLM_MODEL}
       --gpu-memory-utilization ${VLLM_GPU_MEMORY_UTILIZATION}
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
 
   # ---------------------------------------------------------------------------
   # LiteLLM
@@ -63,7 +74,7 @@ services:
       db:
         condition: service_healthy
       vllm:
-        condition: service_started
+        condition: service_healthy
     environment:
       DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
@@ -72,6 +83,11 @@ services:
     volumes:
       - ./litellm_config.yaml:/app/config.yaml:ro
     command: ["--config", "/app/config.yaml"]
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
 
 volumes:
   postgres_data:

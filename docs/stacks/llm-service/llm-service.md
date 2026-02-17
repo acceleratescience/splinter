@@ -1,8 +1,11 @@
 # LLM Inference Service Setup
 
+> [!WARNING]
+> Although we try to keep this documentation up to date with changes, the ultimate sources of truth are the files themselves. If something in the documentation is inconsistent with the source files, then trust the source files.
+
 ## Introduction
 
-This guide walks through the setup of the LLM Inference Service, a multi-user platform for serving large language models to researchers. The service uses a layered architecture designed for security, scalability, and manageability.
+This guide walks through the setup of the LLM Inference Service, a multi-user platform for serving large language models to researchers. The service uses a layered architecture designed for security, scalability, and manageability. Although information about security is provided in the [security documentation](security.md), we go through the files in detail here.
 
 ### File Structure
 All files relevant to this section can be found in the following locations in the tree:
@@ -15,10 +18,15 @@ splinter/
 │   └── llm-service.sh
 └── stacks/
     └── llm-service/
+        ├── filters
+        │   ├── nginx-llm-auth.conf
+        │   └── nginx-llm-blocked.conf
         ├── .env.example
         ├── docker-compose.yml
+        ├── fail2ban-jail.local
         ├── litellm_config.yaml
-        └── nginx.conf.template
+        ├── nginx.conf.template
+        └── security.conf.template
 ```
 
 ### Architecture Overview
@@ -141,15 +149,30 @@ Like with the server setup and the monitoring, there is a [shell script](../scri
 We first define the [nginx configuration file](../stacks/llm-service/nginx.conf.template). We will work through each section and understand what is going on:
 
 ```conf
+# Validate Authorization header format (Bearer + LiteLLM key prefix)
+map $http_authorization $auth_valid {
+    default 0;
+    "~^Bearer\s+sk-.{10,}$" 1;
+}
+```
+
+This is our first line of defence at the Nginx level. The `map` directive inspects every incoming request's `Authorization` header and sets a variable (`$auth_valid`) based on whether it matches the expected pattern. The regex checks for: a `Bearer` prefix, followed by whitespace, followed by `sk-` and at least 10 characters. Anything that doesn't match gets `$auth_valid = 0`.
+
+This is a _format_ check, not actual key validation -- LiteLLM handles that. The point is to reject obviously invalid requests at the C level before they ever touch the Python process. A bot spamming your endpoint with no auth header? Dropped. Someone sending `Authorization: password123`? Dropped. Cheaply.
+
+We'll see how this variable is used later in the [security snippet](#security-snippet).
+
+```conf
 # Rate limiting zones (safety backstop - LiteLLM handles per-user limits)
-limit_req_zone $binary_remote_addr zone=api_limit:10m rate=100r/s;
+limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
 limit_conn_zone $binary_remote_addr zone=conn_limit:10m;
 ```
+
 The first line creates a zone called api_limit for tracking request rates:
 
 - `$binary_remote_addr` — the key to track by (the client's IP address in binary form, which is more memory-efficient than string form)
 - `zone=api_limit:10m` — allocates 10MB of shared memory for this zone. Each tracked IP uses roughly 64 bytes, so 10MB can track around 160,000 unique IPs simultaneously
-- `rate=100r/s` — allows 100 requests per second per IP address
+- `rate=10r/s` — allows 10 requests per second per IP address
 
 The second line creates a zone called conn_limit for tracking concurrent connections:
 
@@ -163,7 +186,30 @@ They protect against different attack patterns:
 
 You might be thinking this is overkill. We already block access to the endpoint to anybody who is not connected to the university network, therefore anybody else will simply not be able to access it. In essence, we are covering off _insider_ attacks. Anybody connected to the university network can hammer the endpoint.
 
+```conf
+upstream litellm_backend {
+    server 127.0.0.1:${LITELLM_PORT} max_conns=200;
+}
 ```
+
+This defines an upstream block for LiteLLM rather than using a direct `proxy_pass` to `127.0.0.1`. The practical difference is `max_conns=200`, which caps how many simultaneous connections Nginx will send to LiteLLM. If this limit is hit, Nginx queues additional requests rather than overwhelming the Python process. This is a form of backpressure -- LiteLLM can only handle so many concurrent requests before it starts degrading, and it's better to queue at the C level than have FastAPI/Uvicorn fall over.
+
+```conf
+# Reject requests with incorrect Host header
+server {
+    listen 80 default_server;
+    listen 443 ssl default_server;
+    server_name _;
+    ssl_reject_handshake on;
+    return 444;
+}
+```
+
+This is a catch-all server block that handles any request that doesn't match our domain. If someone hits the server by IP address directly, or sends a `Host: evil.com` header, this block matches instead of our real server block. The `ssl_reject_handshake on` means that for HTTPS connections, the TLS handshake itself is rejected -- the attacker doesn't even get a certificate back, so they can't fingerprint what's running. The `444` is Nginx's special "close connection with no response" code.
+
+This is effective against automated scanners that enumerate IP ranges looking for services. They'll get nothing back, which makes your server look like a dead end.
+
+```conf
 server {
     listen 80;
     server_name ${DOMAIN};
@@ -172,23 +218,23 @@ server {
     server_tokens off;
 ```
 
-This opens up the main server configuration block. We listen on port 80 (HTTP), which will change automatically to 443 (HTTPS) when we run certbot. We also define the server name so that if somebody hits the server via the IP address directly, this block won't match and will throw an error.
+This opens up the main server configuration block. We listen on port 80 (HTTP), which will change automatically to 443 (HTTPS) when we run certbot. We also define the server name so that if somebody hits the server via the IP address directly, this block won't match and the catch-all block above will drop the connection.
 
 We use `server_tokens` to hide the Nginx version in error pages and the response header. Without this, responses include things like `Server: nginx/1.24.0`, which tells attackers exactly which vulnerabilities to try. Minor hardening, but free I guess.
 
-
-```
+```conf
     # ---------------------------------------------------------------------------
     # Connection & Rate Limits (backstop only - firewall and LiteLLM are primary)
     # ---------------------------------------------------------------------------
-    limit_req zone=api_limit burst=100 nodelay;
-    limit_conn conn_limit 200;
+    limit_req zone=api_limit burst=50 nodelay;
+    limit_conn conn_limit 20;
 ```
-These two lines are connected to the rate limits we defined at the start. We allow temporary bursts of 100 requests before rate limiting kicks in. This is because these burst can be legitimate -- it's sustained high rates that we have to worry about. We also allow them through immediately rather than drip feeding at the rate limit.
 
-We also cap simultaneous IP connections at 200.
+These two lines are connected to the rate limits we defined at the start. We allow temporary bursts of 50 requests before rate limiting kicks in. This is because these bursts can be legitimate -- it's sustained high rates that we have to worry about. We also allow them through immediately rather than drip feeding at the rate limit.
 
-```
+We also cap simultaneous connections per IP at 20.
+
+```conf
     # ---------------------------------------------------------------------------
     # Timeouts
     # ---------------------------------------------------------------------------
@@ -206,19 +252,20 @@ This controls how long Nginx waits for various stages of a request before giving
 
 - `send_timeout 30s;` — the mirror image: how long Nginx waits between successive writes to the client. If the client stops reading the response for 30 seconds, Nginx gives up.
 
-- `keepalive_timeout 65s;` — how long an idle connection stays open waiting for another request. HTTP keep-alive lets clients reuse connections rather than opening a new one for each request. 65 seconds seems like a sensible default. long enough to be useful, short enough to not accumulate thousands of idle connections.
+- `keepalive_timeout 65s;` — how long an idle connection stays open waiting for another request. HTTP keep-alive lets clients reuse connections rather than opening a new one for each request. 65 seconds seems like a sensible default. Long enough to be useful, short enough to not accumulate thousands of idle connections.
 
 This is just for incoming requests. LLM inference can take a while, so we have to increase these for proxy timeouts, which we will see later.
 
-```
+```conf
     # ---------------------------------------------------------------------------
     # Request Size Limits
     # ---------------------------------------------------------------------------
-    client_max_body_size 2M;
+    client_max_body_size 10M;
 ```
-This limits how large an incoming request can be. At the moment, we don't have image or video uploads, so 2MB is pretty big, considering the inputs are just text.
 
-```
+This limits how large an incoming request can be. At the moment, we don't have image or video uploads, so 10MB is generous considering the inputs are just text. It provides headroom for future multimodal support while still preventing abuse via oversized payloads.
+
+```conf
     # ---------------------------------------------------------------------------
     # Security Headers
     # ---------------------------------------------------------------------------
@@ -227,47 +274,35 @@ This limits how large an incoming request can be. At the moment, we don't have i
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 ```
+
 These are nice-to-have, and more for browser-based applications. In order, they:
 
 - Trust the declared content and don't try to turn JSON into HTML or something stupid.
 
 - Prevent pages from being embedded in other sites.
 
-- Mostly for older browsers to prevent cross-site scripting attacks
+- Mostly for older browsers to prevent cross-site scripting attacks.
 
 - Controls how much information is sent when following links.
 
-Again, these are standard hardening headers, and do a lot but are free and are nice in case you miss something.
+Again, these are standard hardening headers. They don't do a lot for a pure API, but they're free and are nice in case you miss something.
 
-```
+```conf
     # ---------------------------------------------------------------------------
     # Blocked Paths
     # ---------------------------------------------------------------------------
     
-    # Block LiteLLM UI - admin access via SSH tunnel only
-    location /ui {
-        return 403;
-    }
-
-    # Block common attack vectors and sensitive files
-    location ~* (\.php|\.asp|\.aspx|\.jsp|\.cgi|\.env|\.git|\.sql|\.bak|\.swp) {
-        return 444;
-    }
-
-    # Block WordPress probes and similar
-    location ~* (wp-admin|wp-login|xmlrpc\.php) {
-        return 444;
-    }
+    include /etc/nginx/snippets/llm-security.conf;
 ```
-Here we block paths that should not be accessible, like the LiteLLM UI. We can only access the UI via an SSH tunnel. We also try to block requests to common attack target files. These are more about not population our logs with bullshit.
 
+Rather than defining blocked paths inline, we pull them in from a separate [security snippet](../stacks/llm-service/security.conf.template). This keeps the main config clean and makes the security rules easier to update independently. The snippet is installed to `/etc/nginx/snippets/llm-security.conf` by the deployment script. We'll walk through its contents [below](#security-snippet).
 
-```
+```conf
     # ---------------------------------------------------------------------------
     # API Proxy (with streaming support)
     # ---------------------------------------------------------------------------
     location / {
-        proxy_pass http://127.0.0.1:${LITELLM_PORT};
+        proxy_pass http://litellm_backend;
         
         # Headers
         proxy_set_header Host $host;
@@ -290,7 +325,8 @@ Here we block paths that should not be accessible, like the LiteLLM UI. We can o
         chunked_transfer_encoding off;
     }
 ```
-So this is the core of the config that makes the service work properly -- everything else is to stop malicious requests and attacks. We first forward requests to LiteLLM running on the localhost. LiteLLM will only accept connections from the local machine.
+
+So this is the core of the config that makes the service work properly -- everything else is to stop malicious requests and attacks. We forward requests to the `litellm_backend` upstream we defined earlier, which handles connection pooling and backpressure.
 
 The headers block preserves information about the original request that would otherwise be lost when Nginx proxies to LiteLLM. Without these, LiteLLM would see every request as coming from `127.0.0.1` over HTTP -- it wouldn't know the client's real IP, the original domain, or whether HTTPS was used. This matters for logging, per-user rate limiting, and generating correct URLs in responses.
 
@@ -301,12 +337,12 @@ The streaming section is so that users can get that nice streaming response -- e
 > [!NOTE]
 > You can see when developers have not implemented this in their chatbots, because you'll send a request and just see those three dots. In order to implement streaming you also need to correctly pass through the python generator to your frontend. In other words, streaming is a pain. The OpenAI Python client handles this automatically if you pass stream=True, so researchers don't need to worry about the implementation details — that's more of a concern for people building web frontends.
 
-```
+```conf
     # ---------------------------------------------------------------------------
     # Health Check Endpoint
     # ---------------------------------------------------------------------------
     location /health {
-        proxy_pass http://127.0.0.1:${LITELLM_PORT}/health;
+        proxy_pass http://litellm_backend/health;
         proxy_set_header Host $host;
         
         # Tighter timeout for health checks
@@ -315,10 +351,76 @@ The streaming section is so that users can get that nice streaming response -- e
     }
 }
 ```
-This final section is just a health check connection for monitoring services. Technically, LiteLLM already has a health endpoint, but here we can tune things explicitely.
 
-So that's quite a lot of information.
+This final section is just a health check connection for monitoring services. Technically, LiteLLM already has a health endpoint, but here we can tune things explicitly.
 
+> [!NOTE]
+> The `/health` endpoint is subject to the same auth check as everything else (via the security snippet). This means external monitoring tools will need a valid API key to hit it. If you need unauthenticated health checks for uptime monitoring, you'll need to add an exemption in the security snippet.
+
+---
+
+### Security Snippet
+
+The security rules are defined in a separate file ([security.conf.template](../stacks/llm-service/security.conf.template)) which gets installed to `/etc/nginx/snippets/llm-security.conf`. This is included in the main server block via the `include` directive we saw above.
+
+```conf
+# Require Authorization header on all requests
+if ($auth_valid = 0) {
+    return 401;
+}
+```
+
+This is where the `$auth_valid` variable from the `map` block gets used. Every request that doesn't have a properly formatted `Authorization` header is immediately rejected with a 401. This happens before any `location` block is evaluated, so there's no way to reach any endpoint without at least _looking_ like you have a valid key. The actual key validation still happens at the LiteLLM layer -- this just prevents the obvious junk from getting that far.
+
+```conf
+# Block docs and test endpoints
+location ~ ^/(redoc|docs|openapi\.json|swagger|test) {
+    return 404;
+}
+
+# Block admin UI
+location /ui {
+    return 404;
+}
+```
+
+These block the LiteLLM documentation pages and admin interface. We return 404 rather than 403 -- there's no reason to confirm to an attacker that these paths exist but are forbidden. As far as they can tell, there's nothing there. The admin UI is only accessible via an SSH tunnel to the server.
+
+```conf
+# Block common attack vectors
+location ~* (\.php|\.asp|\.aspx|\.jsp|\.cgi|\.env|\.git|\.sql|\.bak|\.swp) {
+    return 444;
+}
+
+# Block WordPress probes
+location ~* (wp-admin|wp-login|xmlrpc\.php) {
+    return 444;
+}
+```
+
+Here we block requests to common attack target files and WordPress probes. These are more about not populating our logs with bullshit -- every server on the internet gets bombarded with these. We return 444 (drop connection silently) rather than any HTTP response, which gives scanners nothing to work with and feeds into our fail2ban rules.
+
+```conf
+# Block config endpoint
+location /config {
+    return 404;
+}
+
+# Block health sub-endpoints (keep /health which requires auth)
+location /health/liveliness {
+    return 404;
+}
+
+location /health/readiness {
+    return 404;
+}
+```
+
+LiteLLM exposes several endpoints that leak configuration details or bypass the main health check. We block these individually. The main `/health` endpoint remains available (with auth) for monitoring, but the sub-endpoints that Kubernetes would typically use are hidden since we're not running in a Kubernetes environment.
+
+So that's quite a lot of information!
+
+---
 
 ### LiteLLM Configuration
 
@@ -355,8 +457,6 @@ litellm_settings:
 ```
 The final section drops unsupported parameters instead of throwing an error and crashing the entire service. We also aren't interested in massive logs in production.
 
-
-*[Section to be completed: Nginx configuration with path blocking, rate limiting, SSL setup]*
 
 ---
 
@@ -400,7 +500,7 @@ This defines the PostgreSQL database that stores LiteLLM's state -- API keys, us
     command: >
       --model ${VLLM_MODEL}
       --gpu-memory-utilization ${VLLM_GPU_MEMORY_UTILIZATION}
-    Healthcheck:
+    healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
@@ -440,7 +540,6 @@ Finally, this is the LiteLLM proxy that sits between Nginx and vLLM, handling au
 The final stage is to check out the [llm service launch script](../scripts/llm-service.sh). Again, there is an [ansible equivalent](../ansible/playbooks/llm-service.yml). This script deploys the entire stack.
 
 ```bash
-
 set -euo pipefail
 
 # Determine script and stack directories
@@ -456,7 +555,18 @@ else
     STACK_DIR="$SCRIPT_DIR"
 fi
 ```
+
 This part is similar to the setup -- we are making sure the script exits if something fails. We also figure out where it's being run from so it can find the stack directory. This lets you run it either from the repo root (`./scripts/llm-service.sh`) or directly from the stack directory.
+
+```bash
+# nginx
+if ! command -v nginx &> /dev/null; then
+    echo "Nginx not found. Installing..."
+    sudo apt-get update && sudo apt-get install -y nginx
+fi
+```
+
+Before anything else, we check that Nginx is installed. If not, we install it. This runs before the numbered steps since Nginx is a hard dependency for everything that follows.
 
 ```bash
 # Check for .env file
@@ -469,7 +579,8 @@ if [ ! -f "${STACK_DIR}/.env" ]; then
     exit 1
 fi
 ```
-This checks that `.env` exists and that all required variables are set before doing anything. Failing early with a clear error is much better than getting halfway through and having `envsubst` silently produce a broken config.
+
+This checks that `.env` exists before doing anything. Failing early with a clear error is much better than getting halfway through and having `envsubst` silently produce a broken config.
 
 ```bash
 # Load environment variables
@@ -484,128 +595,79 @@ for var in $REQUIRED_VARS; do
     fi
 done
 ```
+
 This loads your `.env` file into the shell environment (filtering out comments and blank lines), then checks that all required variables are actually set. If any are missing, the script exits with a clear error message rather than continuing and producing broken configs.
 
-```bash
-if ! command -v nginx &> /dev/null; then
-    echo "[0/6] Installing Nginx..."
-    sudo apt update && sudo apt install -y nginx
-fi
-```
-Install Nginx.
+Now we get into the numbered deployment steps:
 
 ```bash
-echo "[1/5] Generating Nginx configuration..."
+echo "[1/7] Generating Nginx configuration..."
 envsubst '${DOMAIN} ${LITELLM_PORT}' < "${STACK_DIR}/nginx.conf.template" > "${STACK_DIR}/${DOMAIN}"
 echo "      Generated: ${STACK_DIR}/${DOMAIN}"
 ```
-This takes the Nginx template and substitutes the environment variables to produce the final config. The envsubst command replaces `${DOMAIN}` and `${LITELLM_PORT}` with their actual values, outputting a file named after your domain (e.g., llm.science.ai.cam.ac.uk).
+
+This takes the Nginx template and substitutes the environment variables to produce the final config. The `envsubst` command replaces `${DOMAIN}` and `${LITELLM_PORT}` with their actual values, outputting a file named after your domain (e.g., `llm.science.ai.cam.ac.uk`).
 
 ```bash
-echo "[2/5] Installing Nginx configuration..."
+echo "[2/7] Installing security snippet..."
+sudo mkdir -p /etc/nginx/snippets
+sudo cp "${STACK_DIR}/security.conf.template" /etc/nginx/snippets/llm-security.conf
+```
+
+This installs the [security snippet](../stacks/llm-service/security.conf.template) we walked through in the Nginx section. The main Nginx config references it via `include /etc/nginx/snippets/llm-security.conf`, so it needs to be in place before we test the config. We create the snippets directory if it doesn't already exist.
+
+```bash
+echo "[3/7] Installing Nginx configuration..."
 sudo cp "${STACK_DIR}/${DOMAIN}" /etc/nginx/sites-available/
 if [ ! -L "/etc/nginx/sites-enabled/${DOMAIN}" ]; then
     sudo ln -s "/etc/nginx/sites-available/${DOMAIN}" /etc/nginx/sites-enabled/
 fi
+
+# Remove default Nginx site if present
+if [ -f /etc/nginx/sites-enabled/default ]; then
+    sudo rm /etc/nginx/sites-enabled/default
+fi
 ```
+
 This copies the generated config to Nginx's `sites-available` directory, then creates a symlink in `sites-enabled` if one doesn't already exist. Nginx only loads configs that are symlinked into `sites-enabled`, so this pattern lets you easily enable/disable sites without deleting the config file.
 
+We also remove the default Nginx site if it's present. On a fresh Ubuntu install, Nginx ships with a default "Welcome to nginx" page. If we leave it enabled, it can conflict with our server block -- and more importantly, it responds to requests on port 80 for any hostname, which undermines our catch-all block that's supposed to drop those connections silently.
+
 ```bash
-echo "[3/5] Testing Nginx configuration..."
+echo "[4/7] Testing Nginx configuration..."
 sudo nginx -t
 
-echo "[4/5] Reloading Nginx..."
+echo "[5/7] Reloading Nginx..."
 sudo systemctl reload nginx
+```
 
-echo "[5/5] Starting Docker stack..."
+We validate the Nginx config with `nginx -t` (which catches syntax errors before you break anything), then reload Nginx to apply the changes without dropping existing connections. Because of `set -e` at the top, if the Nginx test fails, the script stops here and won't continue with a broken config.
+
+```bash
+echo "[6/7] Installing and configuring fail2ban..."
+if ! command -v fail2ban-server &> /dev/null; then
+    sudo apt-get update && sudo apt-get install -y fail2ban
+fi
+
+sudo cp "${STACK_DIR}/fail2ban-jail.local" /etc/fail2ban/jail.local
+sudo cp "${STACK_DIR}/filters/nginx-llm-blocked.conf" /etc/fail2ban/filter.d/
+sudo cp "${STACK_DIR}/filters/nginx-llm-auth.conf" /etc/fail2ban/filter.d/
+sudo systemctl enable fail2ban
+sudo systemctl restart fail2ban
+```
+
+This installs and configures [fail2ban](https://github.com/fail2ban/fail2ban) with two custom jails that monitor our Nginx access logs. The `nginx-llm-blocked` jail watches for repeated hits on attack vector paths (the ones returning 444) and bans the IP for 24 hours after 5 attempts. The `nginx-llm-auth` jail watches for repeated 401s (failed authentication) and bans for 1 hour after 10 attempts. The filter files define the regex patterns that match the relevant log lines.
+
+```bash
+echo "[7/7] Starting Docker stack..."
 cd "${STACK_DIR}"
 docker compose up -d
 ```
-This final section validates the Nginx config with nginx -t (which catches syntax errors before you break anything), then reloads Nginx to apply the changes without dropping existing connections. Finally, it starts the Docker stack in detached mode. Because of set -e at the top, if the Nginx test fails, the script stops and won't start the Docker containers with a broken config. And then of course we run the final `up` command.
 
-## Connect and start
-
-
-git clone repository
-
-Run setup script
-
-```bash
-newgrp docker
-```
-
-or run in sudo
-
-Run monitoring:
-```bash
-chmod +x ./scripts/monitoring.sh
-```
-
-change things
-
-- domain in .env  
-- any passwords
-
-run script
-```bash
-chmod +x ./scripts/llm-service.sh
-```
-
-certification
-
-```bash
-sudo apt-get install -y certbot python3-certbot-nginx
-```
-
-## Pen testing
-### Port scan from outside
-```
-nmap -sV llm.antipodesintelligence.com
-```
-### Check TLS configuration
-```
-nmap --script ssl-enum-ciphers -p 443 llm.antipodesintelligence.com
-```
-### Check HTTP headers
-```
-curl -I https://llm.antipodesintelligence.com
-```
-nginx vesion leaked
-```
-server_tokens off;
-```
-### 
-
-## User Management
-
-### Creating API Keys
+Finally, we start the Docker stack in detached mode. This pulls and starts PostgreSQL, vLLM, and LiteLLM. Because of the `depends_on` and health check configuration in the compose file, the services start in the correct order: PostgreSQL first, then vLLM, then LiteLLM once both dependencies are healthy.
 
 
-### Organising Teams
-
-
-### Setting Rate Limits
-
-
----
-
-## Monitoring and Maintenance
-
-### Usage Statistics
-
-
-### Log Management
-
-
-### Troubleshooting
-
-
----
-
-## Appendix
-
-
-### References
+## References
 
 - [vLLM Documentation](https://docs.vllm.ai/)
 - [LiteLLM Documentation](https://docs.litellm.ai/)
