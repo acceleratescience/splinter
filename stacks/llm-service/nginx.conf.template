@@ -13,9 +13,19 @@
 #
 # =============================================================================
 
+# Validate Authorization header format (Bearer + LiteLLM key prefix)
+map $http_authorization $auth_valid {
+    default 0;
+    "~^Bearer\s+sk-.{10,}$" 1;
+}
+
 # Rate limiting zones (safety backstop - LiteLLM handles per-user limits)
 limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
 limit_conn_zone $binary_remote_addr zone=conn_limit:10m;
+
+upstream litellm_backend {
+    server 127.0.0.1:${LITELLM_PORT} max_conns=200;
+}
 
 # Reject requests with incorrect Host header
 server {
@@ -70,7 +80,7 @@ server {
     # API Proxy (with streaming support)
     # ---------------------------------------------------------------------------
     location / {
-        proxy_pass http://127.0.0.1:${LITELLM_PORT};
+        proxy_pass http://litellm_backend;
         
         # Headers
         proxy_set_header Host $host;
@@ -97,7 +107,7 @@ server {
     # Health Check Endpoint
     # ---------------------------------------------------------------------------
     location /health {
-        proxy_pass http://127.0.0.1:${LITELLM_PORT}/health;
+        proxy_pass http://litellm_backend/health;
         proxy_set_header Host $host;
         
         # Tighter timeout for health checks

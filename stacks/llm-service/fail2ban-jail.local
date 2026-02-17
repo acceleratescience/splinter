@@ -1,0 +1,17 @@
+[nginx-llm-blocked]
+enabled = true
+port = http,https
+filter = nginx-llm-blocked
+logpath = /var/log/nginx/access.log
+maxretry = 5
+findtime = 60
+bantime = 86400
+
+[nginx-llm-auth]
+enabled = true
+port = http,https
+filter = nginx-llm-auth
+logpath = /var/log/nginx/access.log
+maxretry = 10
+findtime = 60
+bantime = 3600

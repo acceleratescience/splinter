@@ -1,5 +1,5 @@
 # Require Authorization header on all requests
-if ($http_authorization = "") {
+if ($auth_valid = 0) {
     return 401;
 }
 

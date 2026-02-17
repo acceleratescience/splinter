@@ -254,4 +254,30 @@ model_list:
 
 ## Adding third party providers
 
-Pretty simple really: do it via the LiteLLM admin panel!
+Pretty simple really: do it via the LiteLLM admin panel! To access the admin UI, run
+
+```bash
+ssh -fN -L 4000:localhost:4000 user@server
+```
+
+We have purposefully made the admin panel not accessible online -- you must SSH into the server in order to access it. In this case we are forwarding to our local machine. Then navigate to http://localhost:4000/ui in the browser.
+
+## Additional considerations
+
+Add fail2ban. This will just ban people who try to aggressively attack your public endpoint.
+
+```bash
+sudo apt-get install -y fail2ban
+```
+
+Then create a `/etc/fail2ban/jail.local`
+
+```ini
+[nginx-botsearch]
+enabled = true
+port = http,https
+filter = nginx-botsearch
+logpath = /var/log/nginx/access.log
+maxretry = 5
+bantime = 86400
+```

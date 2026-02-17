@@ -57,27 +57,43 @@ for var in $REQUIRED_VARS; do
     fi
 done
 
-echo "[1/6] Generating Nginx configuration..."
+echo "[1/7] Generating Nginx configuration..."
 envsubst '${DOMAIN} ${LITELLM_PORT}' < "${STACK_DIR}/nginx.conf.template" > "${STACK_DIR}/${DOMAIN}"
 echo "      Generated: ${STACK_DIR}/${DOMAIN}"
 
-echo "[2/6] Installing security snippet..."
+echo "[2/7] Installing security snippet..."
 sudo mkdir -p /etc/nginx/snippets
-sudo cp "${STACK_DIR}/security.conf.template" /etc/nginx/snippets/security.conf
+sudo cp "${STACK_DIR}/security.conf.template" /etc/nginx/snippets/llm-security.conf
 
-echo "[3/6] Installing Nginx configuration..."
+echo "[3/7] Installing Nginx configuration..."
 sudo cp "${STACK_DIR}/${DOMAIN}" /etc/nginx/sites-available/
 if [ ! -L "/etc/nginx/sites-enabled/${DOMAIN}" ]; then
     sudo ln -s "/etc/nginx/sites-available/${DOMAIN}" /etc/nginx/sites-enabled/
 fi
 
-echo "[4/6] Testing Nginx configuration..."
+# Remove default Nginx site if present
+if [ -f /etc/nginx/sites-enabled/default ]; then
+    sudo rm /etc/nginx/sites-enabled/default
+fi
+
+echo "[4/7] Testing Nginx configuration..."
 sudo nginx -t
 
-echo "[5/6] Reloading Nginx..."
+echo "[5/7] Reloading Nginx..."
 sudo systemctl reload nginx
 
-echo "[6/6] Starting Docker stack..."
+echo "[6/7] Installing and configuring fail2ban..."
+if ! command -v fail2ban-server &> /dev/null; then
+    sudo apt-get update && sudo apt-get install -y fail2ban
+fi
+
+sudo cp "${STACK_DIR}/fail2ban-jail.local" /etc/fail2ban/jail.local
+sudo cp "${STACK_DIR}/filters/nginx-llm-blocked.conf" /etc/fail2ban/filter.d/
+sudo cp "${STACK_DIR}/filters/nginx-llm-auth.conf" /etc/fail2ban/filter.d/
+sudo systemctl enable fail2ban
+sudo systemctl restart fail2ban
+
+echo "[7/7] Starting Docker stack..."
 cd "${STACK_DIR}"
 docker compose up -d
 
