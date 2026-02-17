@@ -523,7 +523,59 @@ docker compose up -d
 ```
 This final section validates the Nginx config with nginx -t (which catches syntax errors before you break anything), then reloads Nginx to apply the changes without dropping existing connections. Finally, it starts the Docker stack in detached mode. Because of set -e at the top, if the Nginx test fails, the script stops and won't start the Docker containers with a broken config. And then of course we run the final `up` command.
 
-## Maybe put all below in seperate section
+## Connect and start
+
+connect to instance
+
+git clone repository
+
+Run setup script
+
+```bash
+newgrp docker
+```
+
+or run in sudo
+
+Run monitoring:
+```bash
+chmod +x ./scripts/monitoring.sh
+```
+
+change things
+
+- domain in .env  
+- any passwords
+
+run script
+```bash
+chmod +x ./scripts/llm-service.sh
+```
+
+certification
+
+```bash
+sudo apt-get install -y certbot python3-certbot-nginx
+```
+
+## Pen testing
+### Port scan from outside
+```
+nmap -sV llm.antipodesintelligence.com
+```
+### Check TLS configuration
+```
+nmap --script ssl-enum-ciphers -p 443 llm.antipodesintelligence.com
+```
+### Check HTTP headers
+```
+curl -I https://llm.antipodesintelligence.com
+```
+nginx vesion leaked
+```
+server_tokens off;
+```
+### 
 
 ## User Management
 

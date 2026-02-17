@@ -17,6 +17,15 @@
 limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
 limit_conn_zone $binary_remote_addr zone=conn_limit:10m;
 
+# Reject requests with incorrect Host header
+server {
+    listen 80 default_server;
+    listen 443 ssl default_server;
+    server_name _;
+    ssl_reject_handshake on;
+    return 444;
+}
+
 server {
     listen 80;
     server_name ${DOMAIN};
@@ -55,20 +64,7 @@ server {
     # Blocked Paths
     # ---------------------------------------------------------------------------
     
-    # Block LiteLLM UI - admin access via SSH tunnel only
-    location /ui {
-        return 403;
-    }
-
-    # Block common attack vectors and sensitive files
-    location ~* (\.php|\.asp|\.aspx|\.jsp|\.cgi|\.env|\.git|\.sql|\.bak|\.swp) {
-        return 444;
-    }
-
-    # Block WordPress probes and similar
-    location ~* (wp-admin|wp-login|xmlrpc\.php) {
-        return 444;
-    }
+    include /etc/nginx/snippets/llm-security.conf;
 
     # ---------------------------------------------------------------------------
     # API Proxy (with streaming support)

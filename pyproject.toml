@@ -8,5 +8,8 @@ dependencies = [
     "mkdocs-glightbox>=0.5.2",
     "mkdocs-material>=9.7.1",
     "mkdocs-mermaid2-plugin>=1.2.3",
-    "numpy>=2.4.2",
+    "numpy>=1.26",
+    "openai>=2.21.0",
+    "rich>=14.3.2",
+    "vllm>=0.15.1",
 ]

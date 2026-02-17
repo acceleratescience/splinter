@@ -23,6 +23,12 @@ else
     STACK_DIR="$SCRIPT_DIR"
 fi
 
+# nginx
+if ! command -v nginx &> /dev/null; then
+    echo "Nginx not found. Installing..."
+    sudo apt-get update && sudo apt-get install -y nginx
+fi
+
 echo "=========================================="
 echo "LiteLLM/vLLM Stack Setup"
 echo "=========================================="
@@ -51,23 +57,27 @@ for var in $REQUIRED_VARS; do
     fi
 done
 
-echo "[1/5] Generating Nginx configuration..."
+echo "[1/6] Generating Nginx configuration..."
 envsubst '${DOMAIN} ${LITELLM_PORT}' < "${STACK_DIR}/nginx.conf.template" > "${STACK_DIR}/${DOMAIN}"
 echo "      Generated: ${STACK_DIR}/${DOMAIN}"
 
-echo "[2/5] Installing Nginx configuration..."
+echo "[2/6] Installing security snippet..."
+sudo mkdir -p /etc/nginx/snippets
+sudo cp "${STACK_DIR}/security.conf" /etc/nginx/snippets/llm-security.conf
+
+echo "[3/6] Installing Nginx configuration..."
 sudo cp "${STACK_DIR}/${DOMAIN}" /etc/nginx/sites-available/
 if [ ! -L "/etc/nginx/sites-enabled/${DOMAIN}" ]; then
     sudo ln -s "/etc/nginx/sites-available/${DOMAIN}" /etc/nginx/sites-enabled/
 fi
 
-echo "[3/5] Testing Nginx configuration..."
+echo "[4/6] Testing Nginx configuration..."
 sudo nginx -t
 
-echo "[4/5] Reloading Nginx..."
+echo "[5/6] Reloading Nginx..."
 sudo systemctl reload nginx
 
-echo "[5/5] Starting Docker stack..."
+echo "[6/6] Starting Docker stack..."
 cd "${STACK_DIR}"
 docker compose up -d
 
