@@ -63,7 +63,7 @@ echo "      Generated: ${STACK_DIR}/${DOMAIN}"
 
 echo "[2/6] Installing security snippet..."
 sudo mkdir -p /etc/nginx/snippets
-sudo cp "${STACK_DIR}/security.conf" /etc/nginx/snippets/llm-security.conf
+sudo cp "${STACK_DIR}/security.conf.template" /etc/nginx/snippets/security.conf
 
 echo "[3/6] Installing Nginx configuration..."
 sudo cp "${STACK_DIR}/${DOMAIN}" /etc/nginx/sites-available/
