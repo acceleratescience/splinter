@@ -1,3 +1,8 @@
+# Require Authorization header on all requests
+if ($http_authorization = "") {
+    return 401;
+}
+
 # Block docs and test endpoints
 location ~ ^/(redoc|docs|openapi\.json|swagger|test) {
     return 404;
