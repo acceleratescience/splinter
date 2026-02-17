@@ -1,0 +1,33 @@
+# Block docs and test endpoints
+location ~ ^/(redoc|docs|openapi\.json|swagger|test) {
+    return 404;
+}
+
+# Block admin UI
+location /ui {
+    return 404;
+}
+
+# Block common attack vectors
+location ~* (\.php|\.asp|\.aspx|\.jsp|\.cgi|\.env|\.git|\.sql|\.bak|\.swp) {
+    return 444;
+}
+
+# Block WordPress probes
+location ~* (wp-admin|wp-login|xmlrpc\.php) {
+    return 444;
+}
+
+# Block config endpoint
+location /config {
+    return 404;
+}
+
+# Block health sub-endpoints (keep /health which requires auth)
+location /health/liveliness {
+    return 404;
+}
+
+location /health/readiness {
+    return 404;
+}

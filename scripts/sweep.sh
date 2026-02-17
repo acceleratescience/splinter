@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # --- CONFIGURATION ---
-API_URL="https://whatever-url.net"  # Change to your endpoint
+API_URL="https://5310hl17mmw3q1-8000.proxy.runpod.net"  # Change to your endpoint
 MODEL_NAME="openai/gpt-oss-120b"                         # Change to your model name
 OUTPUT_DIR="./bench_results_$(date +%Y%m%d_%H%M%S)"
 # The rates we want to test (Requests per Second)
@@ -21,11 +21,11 @@ for RATE in "${CONCURRENCY_RATES[@]}"; do
     echo "Testing Concurrency: $RATE ..."
     
     # Run the vLLM benchmark tool
-    vllm bench serve \
-        --backend vllm \
+    uv run vllm bench serve \
+        --backend openai-chat \
         --base-url "$API_URL" \
         --model "$MODEL_NAME" \
-        --endpoint /v1/completions \
+        --endpoint /v1/chat/completions \
         --dataset-name sharegpt \
         --dataset-path ShareGPT_V3_unfiltered_cleaned_split.json \
         --num-prompts "$NUM_PROMPTS" \
