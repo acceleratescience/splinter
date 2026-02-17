@@ -31,7 +31,7 @@ splinter/
 
 ### Architecture Overview
 
-![LLM Service Architecture](../assets/imgs/llm-service-arch.png)
+![LLM Service Architecture](../../assets/imgs/llm-service-arch.png)
 
 ### Why This Stack?
 
