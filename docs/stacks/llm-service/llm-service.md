@@ -1,4 +1,4 @@
-# LLM Inference Service
+# LLM Inference Service Setup
 
 ## Introduction
 
@@ -525,7 +525,6 @@ This final section validates the Nginx config with nginx -t (which catches synta
 
 ## Connect and start
 
-connect to instance
 
 git clone repository
 
