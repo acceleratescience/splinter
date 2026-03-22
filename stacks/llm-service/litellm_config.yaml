@@ -13,12 +13,18 @@ model_list:
   - model_name: openai/gpt-oss-120b
     litellm_params:
       model: openai/openai/gpt-oss-120b
-      api_base: http://vllm:8000/v1
+      api_base: http://vllm-openai:8000/v1
+      api_key: "none"
+      stream: true
+  - model_name: Qwen/Qwen3.5-27B-FP8
+    litellm_params:
+      model: openai/Qwen/Qwen3.5-27B-FP8
+      api_base: http://vllm-qwen:8001/v1
       api_key: "none"
       stream: true
 
 general_settings:
-  store_model_in_db: true
+  store_model_in_db: false
   ui_access_mode: "admin_only"
   block_robots: true
   disable_generic_signup: true

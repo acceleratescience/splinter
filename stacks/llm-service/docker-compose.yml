@@ -33,21 +33,30 @@ services:
   # ---------------------------------------------------------------------------
   # vLLM
   # ---------------------------------------------------------------------------
-  vllm:
+  # GPT-120b
+  vllm-openai:
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "0,1"
     image: vllm/vllm-openai:latest
-    container_name: vllm-server
+    container_name: vllm-openai
     restart: unless-stopped
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: all
+              device_ids: ['0', '1']
               capabilities: [gpu]
+    networks:
+      - default
+      - monitoring
     command: >
-      --model ${VLLM_MODEL}
-      --gpu-memory-utilization ${VLLM_GPU_MEMORY_UTILIZATION}
-      --tensor-parallel-size ${VLLM_TENSOR_PARALLEL_SIZE}
+      --model openai/gpt-oss-120b
+      --gpu-memory-utilization 0.80
+      --tensor-parallel-size 2
+      --max-model-len 32768
+      --max-num-seqs 256
+      --port 8000
     logging:
       driver: json-file
       options:
@@ -55,11 +64,47 @@ services:
         max-file: "3"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
+      interval: 10s
       timeout: 10s
       retries: 5
-      start_period: 300s
+      start_period: 500s
 
+  # Qwen3.5
+  vllm-qwen:
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "2"
+    image: vllm/vllm-openai:latest
+    container_name: vllm-qwen
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['2']
+              capabilities: [gpu]
+    networks:
+      - default
+      - monitoring
+    command: >
+      --model Qwen/Qwen3.5-27B-FP8
+      --gpu-memory-utilization 0.80
+      --tensor-parallel-size 1
+      --max-model-len 32768
+      --max-num-seqs 256
+      --reasoning-parser qwen3
+      --port 8001
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 500s
   # ---------------------------------------------------------------------------
   # LiteLLM
   # ---------------------------------------------------------------------------
@@ -72,7 +117,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      vllm:
+      vllm-openai:
+        condition: service_healthy
+      vllm-qwen:
         condition: service_healthy
     environment:
       DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
@@ -90,3 +137,9 @@ services:
 
 volumes:
   postgres_data:
+
+networks:
+  default:
+  monitoring:
+    external: true
+    name: monitoring_default
