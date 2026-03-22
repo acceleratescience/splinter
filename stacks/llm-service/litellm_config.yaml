@@ -10,9 +10,9 @@
 # =============================================================================
 
 model_list:
-  - model_name: openai/gpt-oss-20b
+  - model_name: openai/gpt-oss-120b
     litellm_params:
-      model: openai/openai/gpt-oss-20b
+      model: openai/openai/gpt-oss-120b
       api_base: http://vllm:8000/v1
       api_key: "none"
       stream: true

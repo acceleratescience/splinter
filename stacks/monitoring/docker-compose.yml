@@ -35,6 +35,8 @@ services:
 
   # Prometheus
   prometheus:
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     image: prom/prometheus:latest
     container_name: monitoring-prom
     restart: always
