@@ -47,6 +47,8 @@ services:
             - driver: nvidia
               device_ids: ['0', '1']
               capabilities: [gpu]
+    volumes:
+      - hf_cache:/root/.cache/huggingface
     networks:
       - default
       - monitoring
@@ -83,6 +85,8 @@ services:
             - driver: nvidia
               device_ids: ['2']
               capabilities: [gpu]
+    volumes:
+      - hf_cache:/root/.cache/huggingface
     networks:
       - default
       - monitoring
@@ -105,6 +109,32 @@ services:
       timeout: 10s
       retries: 5
       start_period: 500s
+
+  speaches:
+    image: ghcr.io/speaches-ai/speaches:latest-cuda
+    container_name: speaches
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['3']
+              capabilities: [gpu]
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "3"
+      WHISPER__COMPUTE_TYPE: int8
+      WHISPER__TTL: "-1"
+    volumes:
+      - speaches_cache:/home/ubuntu/.cache/huggingface/hub
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s    
   # ---------------------------------------------------------------------------
   # LiteLLM
   # ---------------------------------------------------------------------------
@@ -137,6 +167,8 @@ services:
 
 volumes:
   postgres_data:
+  hf_cache:
+  speaches_cache:
 
 networks:
   default:

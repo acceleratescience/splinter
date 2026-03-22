@@ -22,6 +22,18 @@ model_list:
       api_base: http://vllm-qwen:8001/v1
       api_key: "none"
       stream: true
+  - model_name: whisper-1
+    litellm_params:
+      model: openai/Systran/faster-whisper-large-v3
+      api_base: http://speaches:8000/v1
+      api_key: "none"
+    model_info:
+      mode: audio_transcription
+  - model_name: tts-1
+    litellm_params:
+      model: openai/speaches-ai/Kokoro-82M-v1.0-ONNX
+      api_base: http://speaches:8000/v1
+      api_key: "none"
 
 general_settings:
   store_model_in_db: false
@@ -32,3 +44,5 @@ general_settings:
 litellm_settings:
   drop_params: true
   set_verbose: false
+  success_callback: ["prometheus"]
+  failure_callback: ["prometheus"]
