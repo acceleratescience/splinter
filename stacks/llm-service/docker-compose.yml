@@ -58,6 +58,8 @@ services:
       --tensor-parallel-size 2
       --max-model-len 32768
       --max-num-seqs 256
+      --enable-auto-tool-choice
+      --tool-call-parser openai
       --port 8000
     logging:
       driver: json-file
@@ -92,11 +94,13 @@ services:
       - monitoring
     command: >
       --model Qwen/Qwen3.5-27B-FP8
-      --gpu-memory-utilization 0.80
+      --gpu-memory-utilization 0.85
       --tensor-parallel-size 1
       --max-model-len 32768
       --max-num-seqs 256
       --reasoning-parser qwen3
+      --enable-auto-tool-choice
+      --tool-call-parser qwen3_coder
       --port 8001
     logging:
       driver: json-file
@@ -134,7 +138,47 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s    
+      start_period: 30s
+
+    # Qwen3 Embedding
+  vllm-embedding:
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "3"
+    image: vllm/vllm-openai:latest
+    container_name: vllm-embedding
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['3']
+              capabilities: [gpu]
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+    networks:
+      - default
+      - monitoring
+    depends_on:
+      speaches:
+        condition: service_healthy
+    command: >
+      --model Qwen/Qwen3-Embedding-4B
+      --gpu-memory-utilization 0.25
+      --max-model-len 8192
+      --max-num-seqs 256
+      --port 8002
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
   # ---------------------------------------------------------------------------
   # LiteLLM
   # ---------------------------------------------------------------------------
@@ -148,9 +192,13 @@ services:
       db:
         condition: service_healthy
       vllm-openai:
-        condition: service_healthy
+        condition: service_started
       vllm-qwen:
-        condition: service_healthy
+        condition: service_started
+      vllm-embedding:
+        condition: service_started
+      speaches:
+        condition: service_started
     environment:
       DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}

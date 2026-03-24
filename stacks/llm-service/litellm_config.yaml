@@ -34,6 +34,13 @@ model_list:
       model: openai/speaches-ai/Kokoro-82M-v1.0-ONNX
       api_base: http://speaches:8000/v1
       api_key: "none"
+  - model_name: Qwen/Qwen3-Embedding-4B
+    litellm_params:
+      model: openai/Qwen/Qwen3-Embedding-4B
+      api_base: http://vllm-embedding:8002/v1
+      api_key: "none"
+    model_info:
+      mode: embedding
 
 general_settings:
   store_model_in_db: false
@@ -44,5 +51,5 @@ general_settings:
 litellm_settings:
   drop_params: true
   set_verbose: false
-  success_callback: ["prometheus"]
-  failure_callback: ["prometheus"]
+  success_callback: ['prometheus']
+  failure_callback: ['prometheus']
