@@ -3,15 +3,23 @@
 # =============================================================================
 # 
 # This file is a template. Deploy using the llm-service.sh script, which will:
-#   1. Substitute environment variables (DOMAIN, LITELLM_PORT)
+#   1. Substitute environment variables (DOMAIN, LITELLM_PORT, SSL_CERT_PATH, SSL_KEY_PATH)
 #   2. Install to /etc/nginx/sites-available/
 #   3. Create the sites-enabled symlink
 #   4. Reload Nginx
 #
-# After running the script, add TLS with:
-#   sudo certbot --nginx -d your.domain.here.com
+# TLS certificates are managed by certbot (auto-renews via systemd timer).
+# First-time setup:  sudo certbot certonly --nginx -d your.domain.here.com
+# Then set SSL_CERT_PATH and SSL_KEY_PATH in .env
 #
 # =============================================================================
+
+# Authentication is handled entirely by LiteLLM (bearer tokens for API,
+# session cookies for UI). Nginx provides TLS, rate limiting, and path blocking.
+
+# Rate limiting zones (safety backstop - LiteLLM handles per-user limits)
+limit_req_zone $binary_remote_addr zone=api_limit:10m rate=1000r/s;
+limit_conn_zone $binary_remote_addr zone=conn_limit:10m;
 
 # Validate Authorization header format (Bearer + LiteLLM key prefix)
 map $http_authorization $auth_valid {
@@ -19,9 +27,17 @@ map $http_authorization $auth_valid {
     "~^Bearer\s+sk-.{10,}$" 1;
 }
 
-# Rate limiting zones (safety backstop - LiteLLM handles per-user limits)
-limit_req_zone $binary_remote_addr zone=api_limit:10m rate=1000r/s;
-limit_conn_zone $binary_remote_addr zone=conn_limit:10m;
+# Require Bearer auth on API and health endpoints only
+map $uri $require_bearer_auth {
+    default                          0;
+    "~^/v1/"                         1;
+    "~^/chat/"                       1;
+    "~^/completions"                 1;
+    "~^/embeddings"                  1;
+    "~^/audio/"                      1;
+    "~^/models"                      1;
+    "~^/health"                      1;
+}
 
 upstream litellm_backend {
     server 127.0.0.1:${LITELLM_PORT} max_conns=1000;
@@ -36,9 +52,25 @@ server {
     return 444;
 }
 
+# ---------------------------------------------------------------------------
+# HTTP → HTTPS redirect
+# ---------------------------------------------------------------------------
 server {
     listen 80;
     server_name ${DOMAIN};
+    return 301 https://$host$request_uri;
+}
+
+# ---------------------------------------------------------------------------
+# HTTPS server
+# ---------------------------------------------------------------------------
+server {
+    listen 443 ssl;
+    server_name ${DOMAIN};
+
+    # TLS certificates (managed by certbot, paths from .env)
+    ssl_certificate ${SSL_CERT_PATH};
+    ssl_certificate_key ${SSL_KEY_PATH};
 
     # Hide Nginx version
     server_tokens off;
@@ -69,6 +101,7 @@ server {
     add_header X-Frame-Options "DENY" always;
     add_header X-XSS-Protection "1; mode=block" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
     # ---------------------------------------------------------------------------
     # Blocked Paths
@@ -88,7 +121,7 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
 
-        # Proxy timeouts (generous for LLM inference?)
+        # Proxy timeouts (generous for LLM inference)
         proxy_connect_timeout 60s;
         proxy_send_timeout 300s;
         proxy_read_timeout 300s;

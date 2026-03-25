@@ -37,7 +37,7 @@ services:
   vllm-openai:
     environment:
       NVIDIA_VISIBLE_DEVICES: "0,1"
-    image: vllm/vllm-openai:latest
+    image: vllm/vllm-openai:${VLLM_VERSION}
     container_name: vllm-openai
     restart: unless-stopped
     deploy:
@@ -77,7 +77,7 @@ services:
   vllm-qwen:
     environment:
       NVIDIA_VISIBLE_DEVICES: "2"
-    image: vllm/vllm-openai:latest
+    image: vllm/vllm-openai:${VLLM_VERSION}
     container_name: vllm-qwen
     restart: unless-stopped
     deploy:
@@ -144,7 +144,7 @@ services:
   vllm-embedding:
     environment:
       NVIDIA_VISIBLE_DEVICES: "3"
-    image: vllm/vllm-openai:latest
+    image: vllm/vllm-openai:${VLLM_VERSION}
     container_name: vllm-embedding
     restart: unless-stopped
     deploy:
@@ -164,7 +164,7 @@ services:
         condition: service_healthy
     command: >
       --model Qwen/Qwen3-Embedding-4B
-      --gpu-memory-utilization 0.25
+      --gpu-memory-utilization 0.12
       --max-model-len 8192
       --max-num-seqs 256
       --port 8002
@@ -180,10 +180,89 @@ services:
       retries: 5
       start_period: 120s
   # ---------------------------------------------------------------------------
+  # SGLang Diffusion — Z-Image-Turbo (Image Generation)
+  # ---------------------------------------------------------------------------
+  sglang-diffusion:
+    image: lmsysorg/sglang:nightly-dev-20260323-999bad5a
+    container_name: sglang-diffusion
+    restart: unless-stopped
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "3"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['3']
+              capabilities: [gpu]
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+    networks:
+      - default
+    depends_on:
+      vllm-embedding:
+        condition: service_healthy
+    command: >
+      sglang serve
+      --model-path Tongyi-MAI/Z-Image-Turbo
+      --port 8003
+      --host 0.0.0.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+  # ---------------------------------------------------------------------------
+  # SGLang Diffusion — Qwen-Image-Edit (Image Editing)
+  # ---------------------------------------------------------------------------
+  sglang-image-edit:
+    image: lmsysorg/sglang:nightly-dev-20260323-999bad5a
+    container_name: sglang-image-edit
+    restart: unless-stopped
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "3"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['3']
+              capabilities: [gpu]
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+    networks:
+      - default
+    depends_on:
+      sglang-diffusion:
+        condition: service_healthy
+    command: >
+      sglang serve
+      --model-path Qwen/Qwen-Image-Edit-2511
+      --port 8004
+      --host 0.0.0.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+
+  # ---------------------------------------------------------------------------
   # LiteLLM
   # ---------------------------------------------------------------------------
   litellm:
-    image: ghcr.io/berriai/litellm:main-latest
+    image: ghcr.io/berriai/litellm:main-v1.81.12-stable.1
     container_name: litellm-proxy
     restart: unless-stopped
     ports:
@@ -199,7 +278,12 @@ services:
         condition: service_started
       speaches:
         condition: service_started
+      sglang-diffusion:
+        condition: service_started
+      sglang-image-edit:
+        condition: service_started
     environment:
+      STORE_MODEL_IN_DB: "True"
       DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
       NO_DOCS: "True"
@@ -212,6 +296,9 @@ services:
       options:
         max-size: "20m"
         max-file: "3"
+    networks:
+      - default
+      - monitoring
 
 volumes:
   postgres_data:
