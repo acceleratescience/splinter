@@ -12,17 +12,58 @@
 model_list:
   - model_name: openai/gpt-oss-120b
     litellm_params:
-      model: openai/openai/gpt-oss-120b
-      api_base: http://vllm:8000/v1
+      model: hosted_vllm/openai/gpt-oss-120b
+      api_base: http://vllm-openai:8000/v1
       api_key: "none"
       stream: true
+  - model_name: Qwen/Qwen3.5-27B-FP8
+    litellm_params:
+      model: hosted_vllm/Qwen/Qwen3.5-27B-FP8
+      api_base: http://vllm-qwen:8001/v1
+      api_key: "none"
+      stream: true
+  - model_name: whisper-1
+    litellm_params:
+      model: hosted_vllm/Systran/faster-whisper-large-v3
+      api_base: http://speaches:8000/v1
+      api_key: "none"
+    model_info:
+      mode: audio_transcription
+  - model_name: tts-1
+    litellm_params:
+      model: hosted_vllm/speaches-ai/Kokoro-82M-v1.0-ONNX
+      api_base: http://speaches:8000/v1
+      api_key: "none"
+  - model_name: Qwen/Qwen3-Embedding-4B
+    litellm_params:
+      model: hosted_vllm/Qwen/Qwen3-Embedding-4B
+      api_base: http://vllm-embedding:8002/v1
+      api_key: "none"
+    model_info:
+      mode: embedding
+  - model_name: Qwen/Qwen-Image-Edit-2511
+    litellm_params:
+      model: openai/Qwen/Qwen-Image-Edit-2511
+      api_base: http://sglang-image-edit:8004/v1
+      api_key: "none"
+    model_info:
+      mode: image_generation
+  - model_name: z-image-turbo
+    litellm_params:
+      model: hosted_vllm/Tongyi-MAI/Z-Image-Turbo
+      api_base: http://sglang-diffusion:8003/v1
+      api_key: "none"
+    model_info:
+      mode: image_generation
 
 general_settings:
   store_model_in_db: true
-  ui_access_mode: "admin_only"
+  ui_access_mode: "all"
   block_robots: true
   disable_generic_signup: true
 
 litellm_settings:
   drop_params: true
   set_verbose: false
+  success_callback: ['prometheus']
+  failure_callback: ['prometheus']

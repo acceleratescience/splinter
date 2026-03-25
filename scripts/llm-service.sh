@@ -49,7 +49,7 @@ fi
 export $(cat "${STACK_DIR}/.env" | grep -v '^#' | grep -v '^$' | xargs)
 
 # Validate required variables
-REQUIRED_VARS="POSTGRES_PASSWORD LITELLM_MASTER_KEY DOMAIN LITELLM_PORT"
+REQUIRED_VARS="POSTGRES_PASSWORD LITELLM_MASTER_KEY DOMAIN LITELLM_PORT SSL_CERT_PATH SSL_KEY_PATH"
 for var in $REQUIRED_VARS; do
     if [ -z "${!var:-}" ]; then
         echo "ERROR: $var is not set in .env"
@@ -58,7 +58,7 @@ for var in $REQUIRED_VARS; do
 done
 
 echo "[1/7] Generating Nginx configuration..."
-envsubst '${DOMAIN} ${LITELLM_PORT}' < "${STACK_DIR}/nginx.conf.template" > "${STACK_DIR}/${DOMAIN}"
+envsubst '${DOMAIN} ${LITELLM_PORT} ${SSL_CERT_PATH} ${SSL_KEY_PATH}' < "${STACK_DIR}/nginx.conf.template" > "${STACK_DIR}/${DOMAIN}"
 echo "      Generated: ${STACK_DIR}/${DOMAIN}"
 
 echo "[2/7] Installing security snippet..."
@@ -90,6 +90,7 @@ fi
 sudo cp "${STACK_DIR}/fail2ban-jail.local" /etc/fail2ban/jail.local
 sudo cp "${STACK_DIR}/filters/nginx-llm-blocked.conf" /etc/fail2ban/filter.d/
 sudo cp "${STACK_DIR}/filters/nginx-llm-auth.conf" /etc/fail2ban/filter.d/
+sudo cp "${STACK_DIR}/filters/nginx-llm-login.conf" /etc/fail2ban/filter.d/
 sudo systemctl enable fail2ban
 sudo systemctl restart fail2ban
 
@@ -108,7 +109,7 @@ echo "  Stop stack:         cd ${STACK_DIR} && docker compose down"
 echo "  Restart stack:      cd ${STACK_DIR} && docker compose restart"
 echo ""
 echo "Next steps:"
-echo "  1. Add TLS:         sudo certbot --nginx -d ${DOMAIN}"
-echo "  2. Access admin UI: ssh -fN -L ${LITELLM_PORT}:localhost:${LITELLM_PORT} user@server"
-echo "                      Then visit http://localhost:${LITELLM_PORT}/ui"
+echo "  1. Admin UI:  https://${DOMAIN}/ui"
+echo "  2. Create users from the admin panel, then share their credentials."
+echo "     Users log in at /ui and generate their own API keys."
 echo ""

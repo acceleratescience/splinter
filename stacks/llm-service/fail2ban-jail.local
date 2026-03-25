@@ -15,3 +15,12 @@ logpath = /var/log/nginx/access.log
 maxretry = 10
 findtime = 60
 bantime = 3600
+
+[nginx-llm-login]
+enabled = true
+port = http,https
+filter = nginx-llm-login
+logpath = /var/log/nginx/access.log
+maxretry = 5
+findtime = 300
+bantime = 3600

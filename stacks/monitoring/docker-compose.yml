@@ -63,3 +63,7 @@ services:
 volumes:
   prometheus_data:
   grafana_data:
+
+networks:
+  default:
+    name: monitoring_default

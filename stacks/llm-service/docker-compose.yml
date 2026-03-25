@@ -33,21 +33,34 @@ services:
   # ---------------------------------------------------------------------------
   # vLLM
   # ---------------------------------------------------------------------------
-  vllm:
-    image: vllm/vllm-openai:latest
-    container_name: vllm-server
+  # GPT-120b
+  vllm-openai:
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "0,1"
+    image: vllm/vllm-openai:${VLLM_VERSION}
+    container_name: vllm-openai
     restart: unless-stopped
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: all
+              device_ids: ['0', '1']
               capabilities: [gpu]
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+    networks:
+      - default
+      - monitoring
     command: >
-      --model ${VLLM_MODEL}
-      --gpu-memory-utilization ${VLLM_GPU_MEMORY_UTILIZATION}
-      --tensor-parallel-size ${VLLM_TENSOR_PARALLEL_SIZE}
+      --model openai/gpt-oss-120b
+      --gpu-memory-utilization 0.80
+      --tensor-parallel-size 2
+      --max-model-len 32768
+      --max-num-seqs 256
+      --enable-auto-tool-choice
+      --tool-call-parser openai
+      --port 8000
     logging:
       driver: json-file
       options:
@@ -55,7 +68,192 @@ services:
         max-file: "3"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 500s
+
+  # Qwen3.5
+  vllm-qwen:
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "2"
+    image: vllm/vllm-openai:${VLLM_VERSION}
+    container_name: vllm-qwen
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['2']
+              capabilities: [gpu]
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+    networks:
+      - default
+      - monitoring
+    command: >
+      --model Qwen/Qwen3.5-27B-FP8
+      --gpu-memory-utilization 0.85
+      --tensor-parallel-size 1
+      --max-model-len 32768
+      --max-num-seqs 256
+      --reasoning-parser qwen3
+      --enable-auto-tool-choice
+      --tool-call-parser qwen3_coder
+      --port 8001
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 500s
+
+  speaches:
+    image: ghcr.io/speaches-ai/speaches:latest-cuda
+    container_name: speaches
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['3']
+              capabilities: [gpu]
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "3"
+      WHISPER__COMPUTE_TYPE: int8
+      WHISPER__TTL: "-1"
+    volumes:
+      - speaches_cache:/home/ubuntu/.cache/huggingface/hub
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/health"]
       interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+    # Qwen3 Embedding
+  vllm-embedding:
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "3"
+    image: vllm/vllm-openai:${VLLM_VERSION}
+    container_name: vllm-embedding
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['3']
+              capabilities: [gpu]
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+    networks:
+      - default
+      - monitoring
+    depends_on:
+      speaches:
+        condition: service_healthy
+    command: >
+      --model Qwen/Qwen3-Embedding-4B
+      --gpu-memory-utilization 0.12
+      --max-model-len 8192
+      --max-num-seqs 256
+      --port 8002
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+  # ---------------------------------------------------------------------------
+  # SGLang Diffusion — Z-Image-Turbo (Image Generation)
+  # ---------------------------------------------------------------------------
+  sglang-diffusion:
+    image: lmsysorg/sglang:nightly-dev-20260323-999bad5a
+    container_name: sglang-diffusion
+    restart: unless-stopped
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "3"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['3']
+              capabilities: [gpu]
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+    networks:
+      - default
+    depends_on:
+      vllm-embedding:
+        condition: service_healthy
+    command: >
+      sglang serve
+      --model-path Tongyi-MAI/Z-Image-Turbo
+      --port 8003
+      --host 0.0.0.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+  # ---------------------------------------------------------------------------
+  # SGLang Diffusion — Qwen-Image-Edit (Image Editing)
+  # ---------------------------------------------------------------------------
+  sglang-image-edit:
+    image: lmsysorg/sglang:nightly-dev-20260323-999bad5a
+    container_name: sglang-image-edit
+    restart: unless-stopped
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "3"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['3']
+              capabilities: [gpu]
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+    networks:
+      - default
+    depends_on:
+      sglang-diffusion:
+        condition: service_healthy
+    command: >
+      sglang serve
+      --model-path Qwen/Qwen-Image-Edit-2511
+      --port 8004
+      --host 0.0.0.0
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 15s
       timeout: 10s
       retries: 5
       start_period: 300s
@@ -64,7 +262,7 @@ services:
   # LiteLLM
   # ---------------------------------------------------------------------------
   litellm:
-    image: ghcr.io/berriai/litellm:main-latest
+    image: ghcr.io/berriai/litellm:main-v1.81.12-stable.1
     container_name: litellm-proxy
     restart: unless-stopped
     ports:
@@ -72,9 +270,20 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      vllm:
-        condition: service_healthy
+      vllm-openai:
+        condition: service_started
+      vllm-qwen:
+        condition: service_started
+      vllm-embedding:
+        condition: service_started
+      speaches:
+        condition: service_started
+      sglang-diffusion:
+        condition: service_started
+      sglang-image-edit:
+        condition: service_started
     environment:
+      STORE_MODEL_IN_DB: "True"
       DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
       NO_DOCS: "True"
@@ -87,6 +296,17 @@ services:
       options:
         max-size: "20m"
         max-file: "3"
+    networks:
+      - default
+      - monitoring
 
 volumes:
   postgres_data:
+  hf_cache:
+  speaches_cache:
+
+networks:
+  default:
+  monitoring:
+    external: true
+    name: monitoring_default
