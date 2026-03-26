@@ -52,6 +52,8 @@
         dest: "{{ repo_path }}"
         version: "{{ repo_branch }}"
         update: yes
+        accept_newhostkey: yes
+      become: false
       register: git_result
 
     - name: Show if repo was updated
