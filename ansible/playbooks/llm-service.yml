@@ -273,6 +273,8 @@
     - name: Wait for LiteLLM to be ready
       uri:
         url: "http://127.0.0.1:{{ env_vars.LITELLM_PORT }}/health"
+        headers:
+          Authorization: "Bearer {{ env_vars.LITELLM_MASTER_KEY }}"
         status_code: 200
       register: litellm_health
       until: litellm_health.status == 200
