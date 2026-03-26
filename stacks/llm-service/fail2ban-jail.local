@@ -1,9 +1,18 @@
+[sshd]
+enabled = true
+maxretry = 3
+findtime = 3600
+bantime = 86400
+bantime.increment = true
+bantime.factor = 24
+
 [nginx-llm-blocked]
 enabled = true
 port = http,https
 filter = nginx-llm-blocked
 logpath = /var/log/nginx/access.log
-maxretry = 5
+backend = auto
+maxretry = 3
 findtime = 60
 bantime = 86400
 
@@ -12,7 +21,8 @@ enabled = true
 port = http,https
 filter = nginx-llm-auth
 logpath = /var/log/nginx/access.log
-maxretry = 10
+backend = auto
+maxretry = 5
 findtime = 60
 bantime = 3600
 
@@ -21,6 +31,7 @@ enabled = true
 port = http,https
 filter = nginx-llm-login
 logpath = /var/log/nginx/access.log
+backend = auto
 maxretry = 5
 findtime = 300
 bantime = 3600

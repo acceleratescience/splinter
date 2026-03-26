@@ -92,7 +92,7 @@ sudo cp "${STACK_DIR}/filters/nginx-llm-blocked.conf" /etc/fail2ban/filter.d/
 sudo cp "${STACK_DIR}/filters/nginx-llm-auth.conf" /etc/fail2ban/filter.d/
 sudo cp "${STACK_DIR}/filters/nginx-llm-login.conf" /etc/fail2ban/filter.d/
 sudo systemctl enable fail2ban
-sudo systemctl restart fail2ban
+sudo fail2ban-client reload
 
 echo "[7/7] Starting Docker stack..."
 cd "${STACK_DIR}"
