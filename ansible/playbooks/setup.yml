@@ -11,7 +11,7 @@
     keyring_dir: /etc/apt/keyrings
     docker_users:
       - "{{ ansible_user }}"
-    repo_url: "https://github.com/acceleratescience/splinter.git"
+    repo_url: "git@github.com:acceleratescience/splinter.git"
     repo_path: "/opt/splinter"
 
   tasks:
