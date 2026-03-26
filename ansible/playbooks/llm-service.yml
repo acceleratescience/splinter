@@ -7,7 +7,7 @@
   become: true
 
   vars:
-    repo_url: "https://github.com/acceleratescience/splinter.git"
+    repo_url: "git@github.com:acceleratescience/splinter.git"
     repo_path: "/opt/splinter"
     repo_branch: "main"
     stack_path: "{{ repo_path }}/stacks/llm-service"
