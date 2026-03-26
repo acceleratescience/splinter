@@ -283,8 +283,9 @@
 
     - name: Test Nginx reverse proxy (expects 401 - confirms Nginx is proxying and auth is enforced)
       uri:
-        url: "http://127.0.0.1/health"
+        url: "https://{{ env_vars.DOMAIN }}/health"
         status_code: 401
+        validate_certs: false
       register: nginx_proxy_health
 
     # ==================== Summary ====================
