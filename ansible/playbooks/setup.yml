@@ -12,7 +12,7 @@
     docker_users:
       - "{{ ansible_user }}"
     repo_url: "https://github.com/acceleratescience/splinter.git"
-    repo_path: "/root/splinter"
+    repo_path: "/opt/splinter"
 
   tasks:
     # ==================== System Updates ====================
@@ -77,18 +77,18 @@
       loop: "{{ docker_users }}"
 
     # ==================== NVIDIA Driver Installation ====================
-    # TODO: need to add some condition that doesn't reboot if the driver is already installed
+    - name: Check if NVIDIA driver is already working
+      command: nvidia-smi
+      register: nvidia_smi_check
+      changed_when: false
+      failed_when: false
+
     - name: Install NVIDIA driver
       apt:
         name: nvidia-driver-550
         state: present
+      when: nvidia_smi_check.rc != 0
       notify: Reboot server
-
-    # Add to handlers section:
-    - name: Reboot server
-      reboot:
-        msg: "Rebooting for NVIDIA driver installation"
-        reboot_timeout: 300
 
     # ==================== NVIDIA Container Toolkit ====================
     - name: Download NVIDIA Container Toolkit GPG key
@@ -118,19 +118,50 @@
       notify: Restart Docker
 
   handlers:
+    - name: Reboot server
+      reboot:
+        msg: "Rebooting for NVIDIA driver installation"
+        reboot_timeout: 300
+
     - name: Restart Docker
       systemd:
         name: docker
         state: restarted
 
   post_tasks:
+    - name: Verify Docker is working
+      command: docker --version
+      register: docker_version
+      changed_when: false
+      failed_when: false
+
+    - name: Display Docker version
+      debug:
+        msg: "Docker: {{ docker_version.stdout }}"
+      when: docker_version.rc == 0
+
     - name: Verify NVIDIA driver is working
       command: nvidia-smi
       register: nvidia_smi_output
       changed_when: false
-      failed_when: false 
+      failed_when: false
 
     - name: Display GPU info
       debug:
         msg: "{{ nvidia_smi_output.stdout_lines }}"
       when: nvidia_smi_output.rc == 0
+
+    - name: Display NVIDIA driver not ready
+      debug:
+        msg: "NVIDIA Driver: NOT READY (reboot required)"
+      when: nvidia_smi_output.rc != 0
+
+    - name: Verify NVIDIA Container Toolkit in Docker
+      command: docker info --format '{{ "{{" }}.Runtimes{{ "}}" }}'
+      register: docker_nvidia_check
+      changed_when: false
+      failed_when: false
+
+    - name: Display NVIDIA Container Toolkit status
+      debug:
+        msg: "NVIDIA Container Toolkit: {{ 'OK' if 'nvidia' in docker_nvidia_check.stdout else 'NOT READY (reboot may be required)' }}"

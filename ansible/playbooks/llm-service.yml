@@ -7,6 +7,9 @@
   become: true
 
   vars:
+    repo_url: "https://github.com/acceleratescience/splinter.git"
+    repo_path: "/opt/splinter"
+    repo_branch: "main"
     stack_path: "{{ repo_path }}/stacks/llm-service"
 
   tasks:
@@ -86,6 +89,8 @@
             - LITELLM_MASTER_KEY
             - DOMAIN
             - LITELLM_PORT
+            - SSL_CERT_PATH
+            - SSL_KEY_PATH
       when: not env_file.stat.exists
 
     - name: Load environment variables from .env
@@ -111,6 +116,8 @@
         - LITELLM_MASTER_KEY
         - DOMAIN
         - LITELLM_PORT
+        - SSL_CERT_PATH
+        - SSL_KEY_PATH
 
     # ==================== Configure Nginx ====================
     - name: Create Nginx snippets directory
@@ -133,7 +140,7 @@
     - name: Generate Nginx configuration
       shell: |
         export $(cat {{ stack_path }}/.env | grep -v '^#' | grep -v '^$' | xargs)
-        envsubst '${DOMAIN} ${LITELLM_PORT}' < {{ stack_path }}/nginx.conf.template > /etc/nginx/sites-available/${DOMAIN}
+        envsubst '${DOMAIN} ${LITELLM_PORT} ${SSL_CERT_PATH} ${SSL_KEY_PATH}' < {{ stack_path }}/nginx.conf.template > /etc/nginx/sites-available/${DOMAIN}
       args:
         executable: /bin/bash
 
@@ -178,6 +185,7 @@
       loop:
         - nginx-llm-blocked.conf
         - nginx-llm-auth.conf
+        - nginx-llm-login.conf
 
     - name: Enable and restart fail2ban
       systemd:
@@ -212,17 +220,53 @@
       retries: 12
       delay: 5
 
-    - name: Wait for vLLM to be ready (this may take a while for model loading)
-      command: docker exec vllm-server python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
-      register: vllm_health
-      until: vllm_health.rc == 0
+    - name: Wait for vLLM OpenAI to be ready (this may take a while for model loading)
+      command: docker exec vllm-openai curl -sf http://localhost:8000/health
+      register: vllm_openai_health
+      until: vllm_openai_health.rc == 0
       retries: 60
       delay: 10
       ignore_errors: true
 
-    - name: Display vLLM status
-      debug:
-        msg: "{{ 'vLLM is ready' if vllm_health.rc == 0 else 'vLLM still loading - check logs with: docker logs vllm-server' }}"
+    - name: Wait for vLLM Qwen to be ready
+      command: docker exec vllm-qwen curl -sf http://localhost:8001/health
+      register: vllm_qwen_health
+      until: vllm_qwen_health.rc == 0
+      retries: 60
+      delay: 10
+      ignore_errors: true
+
+    - name: Wait for Speaches to be ready
+      command: docker exec speaches curl -sf http://localhost:8000/health
+      register: speaches_health
+      until: speaches_health.rc == 0
+      retries: 30
+      delay: 5
+      ignore_errors: true
+
+    - name: Wait for vLLM Embedding to be ready
+      command: docker exec vllm-embedding curl -sf http://localhost:8002/health
+      register: vllm_embedding_health
+      until: vllm_embedding_health.rc == 0
+      retries: 30
+      delay: 10
+      ignore_errors: true
+
+    - name: Wait for SGLang Diffusion to be ready
+      command: docker exec sglang-diffusion curl -sf http://localhost:8003/health
+      register: sglang_diffusion_health
+      until: sglang_diffusion_health.rc == 0
+      retries: 40
+      delay: 10
+      ignore_errors: true
+
+    - name: Wait for SGLang Image Edit to be ready
+      command: docker exec sglang-image-edit curl -sf http://localhost:8004/health
+      register: sglang_image_edit_health
+      until: sglang_image_edit_health.rc == 0
+      retries: 40
+      delay: 10
+      ignore_errors: true
 
     - name: Wait for LiteLLM to be ready
       uri:
@@ -248,22 +292,28 @@
           ========================================
 
           Services:
-            - vLLM:     http://127.0.0.1:8000 (internal only)
-            - LiteLLM:  http://127.0.0.1:{{ env_vars.LITELLM_PORT }} (internal only)
-            - API:      https://{{ env_vars.DOMAIN }}
+            - vLLM OpenAI (gpt-oss-120b):       http://127.0.0.1:8000 (internal, GPU 0-1)
+            - vLLM Qwen (Qwen3.5-27B-FP8):      http://127.0.0.1:8001 (internal, GPU 2)
+            - vLLM Embedding (Qwen3-Embedding):  http://127.0.0.1:8002 (internal, GPU 3)
+            - Speaches (whisper/tts):             http://127.0.0.1:8000 (internal, GPU 3)
+            - SGLang Diffusion (Z-Image-Turbo):  http://127.0.0.1:8003 (internal, GPU 3)
+            - SGLang Image Edit:                 http://127.0.0.1:8004 (internal, GPU 3)
+            - LiteLLM Proxy:                     http://127.0.0.1:{{ env_vars.LITELLM_PORT }} (internal)
+            - API:                               https://{{ env_vars.DOMAIN }}
 
           Health Status:
-            - PostgreSQL: healthy
-            - vLLM:       {{ 'ready' if vllm_health.rc == 0 else 'loading (check logs)' }}
-            - LiteLLM:    ready
-            - Nginx:      ready (auth enforced)
-            - Fail2ban:   active
+            - PostgreSQL:       healthy
+            - vLLM OpenAI:      {{ 'ready' if vllm_openai_health.rc == 0 else 'loading (docker logs vllm-openai)' }}
+            - vLLM Qwen:        {{ 'ready' if vllm_qwen_health.rc == 0 else 'loading (docker logs vllm-qwen)' }}
+            - Speaches:         {{ 'ready' if speaches_health.rc == 0 else 'loading (docker logs speaches)' }}
+            - vLLM Embedding:   {{ 'ready' if vllm_embedding_health.rc == 0 else 'loading (docker logs vllm-embedding)' }}
+            - SGLang Diffusion: {{ 'ready' if sglang_diffusion_health.rc == 0 else 'loading (docker logs sglang-diffusion)' }}
+            - SGLang Img Edit:  {{ 'ready' if sglang_image_edit_health.rc == 0 else 'loading (docker logs sglang-image-edit)' }}
+            - LiteLLM:          ready
+            - Nginx:            ready (auth enforced)
+            - Fail2ban:         active
 
-          Next steps:
-            1. Add TLS:  sudo certbot --nginx -d {{ env_vars.DOMAIN }}
-            2. Access admin UI via SSH tunnel:
-               ssh -fN -L {{ env_vars.LITELLM_PORT }}:localhost:{{ env_vars.LITELLM_PORT }} user@{{ ansible_host }}
-               Then visit http://localhost:{{ env_vars.LITELLM_PORT }}/ui
+          Admin UI: https://{{ env_vars.DOMAIN }}/ui
 
           Useful commands:
             - View logs:     cd {{ stack_path }} && docker compose logs -f
