@@ -1,0 +1,79 @@
+---
+# Service control playbook - start, stop, or restart individual services
+#
+# Usage:
+#   ansible-playbook -i inventory.ini playbooks/service-control.yml -e service=vllm-qwen -e action=stop
+#   ansible-playbook -i inventory.ini playbooks/service-control.yml -e service=vllm-qwen -e action=start
+#   ansible-playbook -i inventory.ini playbooks/service-control.yml -e service=vllm-qwen -e action=restart
+#
+# Options:
+#   service   - Docker Compose service name (required)
+#   action    - start, stop, or restart (default: restart)
+#   force     - Force remove containers on stop (default: false)
+#   timeout   - Shutdown timeout in seconds (default: 30)
+
+- name: Control LLM stack service
+  hosts: gpu_servers
+  become: true
+
+  vars:
+    stack_path: "/opt/splinter/stacks/llm-service"
+    action: restart
+    force: false
+    timeout: 30
+    valid_services:
+      - vllm-openai
+      - vllm-qwen
+      - vllm-embedding
+      - speaches
+      - sglang-diffusion
+      - sglang-image-edit
+      - litellm
+      - db
+
+  tasks:
+    - name: Validate service name is provided
+      fail:
+        msg: "Required variable 'service' not set. Usage: -e service=vllm-qwen"
+      when: service is not defined
+
+    - name: Validate service name
+      fail:
+        msg: |
+          Unknown service '{{ service }}'.
+          Valid services: {{ valid_services | join(', ') }}
+      when: service not in valid_services
+
+    - name: Validate action
+      fail:
+        msg: "Invalid action '{{ action }}'. Must be one of: start, stop, restart"
+      when: action not in ['start', 'stop', 'restart']
+
+    - name: "{{ action | capitalize }} service '{{ service }}'"
+      community.docker.docker_compose_v2:
+        project_src: "{{ stack_path }}"
+        services:
+          - "{{ service }}"
+        state: "{{ 'absent' if action == 'stop' else 'present' }}"
+        recreate: "{{ 'always' if action == 'restart' else 'auto' }}"
+        remove_orphans: false
+        timeout: "{{ timeout }}"
+      when: not (action == 'stop' and force | bool)
+
+    - name: "Force stop service '{{ service }}'"
+      command: >
+        docker compose --project-directory {{ stack_path }}
+        rm --force --stop -v {{ service }}
+      when: action == 'stop' and force | bool
+
+    - name: Get container status
+      command: >
+        docker compose --project-directory {{ stack_path }}
+        ps --format json {{ service }}
+      register: container_status
+      changed_when: false
+      failed_when: false
+
+    - name: Display result
+      debug:
+        msg: "{{ action | capitalize }} {{ service }}: done. {{ 'Container removed.' if action == 'stop' else '' }}"
