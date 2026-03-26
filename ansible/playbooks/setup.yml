@@ -39,6 +39,8 @@
         dest: "{{ repo_path }}"
         version: main
         update: yes
+        accept_newhostkey: yes
+      become: false
 
     # ==================== Docker Installation ====================
     - name: Create keyrings directory
