@@ -189,11 +189,14 @@
         - nginx-llm-auth.conf
         - nginx-llm-login.conf
 
-    - name: Enable and restart fail2ban
+    - name: Enable fail2ban
       systemd:
         name: fail2ban
-        state: restarted
         enabled: yes
+
+    - name: Reload fail2ban configuration
+      command: fail2ban-client reload
+      changed_when: true
 
     # ==================== Deploy LLM Stack ====================
     - name: Pull latest Docker images

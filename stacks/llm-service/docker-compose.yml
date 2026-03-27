@@ -115,7 +115,7 @@ services:
       start_period: 500s
 
   speaches:
-    image: ghcr.io/speaches-ai/speaches:latest-cuda
+    image: ghcr.io/speaches-ai/speaches:${SPEACHES_VERSION}
     container_name: speaches
     restart: unless-stopped
     deploy:
@@ -183,7 +183,7 @@ services:
   # SGLang Diffusion — Z-Image-Turbo (Image Generation)
   # ---------------------------------------------------------------------------
   sglang-diffusion:
-    image: lmsysorg/sglang:nightly-dev-20260323-999bad5a
+    image: lmsysorg/sglang:${SGLANG_VERSION}
     container_name: sglang-diffusion
     restart: unless-stopped
     environment:
@@ -222,7 +222,7 @@ services:
   # SGLang Diffusion — Qwen-Image-Edit (Image Editing)
   # ---------------------------------------------------------------------------
   sglang-image-edit:
-    image: lmsysorg/sglang:nightly-dev-20260323-999bad5a
+    image: lmsysorg/sglang:${SGLANG_VERSION}
     container_name: sglang-image-edit
     restart: unless-stopped
     environment:
@@ -262,7 +262,7 @@ services:
   # LiteLLM
   # ---------------------------------------------------------------------------
   litellm:
-    image: ghcr.io/berriai/litellm:main-v1.81.12-stable.1
+    image: ghcr.io/berriai/litellm:${LITELLM_VERSION}
     container_name: litellm-proxy
     restart: unless-stopped
     ports:
