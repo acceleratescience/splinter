@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Splinter Architecture - GPU Server Infrastructure</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #0d1117;
+    color: #c9d1d9;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.6rem;
+    color: #58a6ff;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #8b949e;
+    margin-bottom: 24px;
+  }
+  .diagram {
+    max-width: 1300px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .layer {
+    border: 1.5px solid #30363d;
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+  }
+  .layer-label {
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    background: #0d1117;
+    padding: 0 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: #8b949e;
+  }
+  .row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .box {
+    border-radius: 8px;
+    padding: 12px 16px;
+    min-width: 160px;
+    text-align: center;
+    position: relative;
+  }
+  .box .name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+  }
+  .box .detail {
+    font-size: 0.72rem;
+    opacity: 0.75;
+    line-height: 1.4;
+  }
+  .box .port {
+    display: inline-block;
+    background: rgba(0,0,0,0.3);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.65rem;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    margin-top: 4px;
+  }
+
+  /* Color schemes */
+  .internet { background: #1a1e2e; border: 1.5px solid #484f78; }
+  .nginx { background: #1a2e1a; border: 1.5px solid #2ea043; }
+  .fail2ban { background: #2e1a1a; border: 1.5px solid #da3633; }
+  .litellm { background: #1a2a3e; border: 1.5px solid #388bfd; }
+  .postgres { background: #1e2a38; border: 1.5px solid #3572A5; }
+  .vllm { background: #2a1e38; border: 1.5px solid #a371f7; }
+  .sglang { background: #2e2a1a; border: 1.5px solid #d29922; }
+  .audio { background: #1a2e2e; border: 1.5px solid #2ea098; }
+  .gpu { background: #1e1e1e; border: 1.5px dashed #76b900; }
+  .monitoring { background: #1a1a2e; border: 1.5px solid #6e7681; }
+  .prom { background: #2e1e1a; border: 1.5px solid #e6522c; }
+  .grafana { background: #2e2a1a; border: 1.5px solid #f46800; }
+  .exporter { background: #1a2222; border: 1.5px solid #4a8c6f; }
+
+  .arrow-down {
+    text-align: center;
+    color: #484f58;
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 2px 0;
+  }
+
+  .gpu-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .gpu-card {
+    border: 1.5px dashed #76b900;
+    border-radius: 8px;
+    padding: 10px;
+    background: #111a0d;
+  }
+  .gpu-card .gpu-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #76b900;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+  .gpu-card .gpu-hw {
+    font-size: 0.6rem;
+    color: #76b900;
+    opacity: 0.6;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .gpu-card .services {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .gpu-card .box {
+    min-width: unset;
+    padding: 8px 10px;
+  }
+  .nvlink-bridge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: -6px 0;
+    position: relative;
+    z-index: 1;
+  }
+  .nvlink-line {
+    height: 0;
+    border-top: 2px dashed #76b900;
+    flex: 1;
+    max-width: 80px;
+    opacity: 0.5;
+  }
+  .nvlink-label {
+    font-size: 0.6rem;
+    color: #76b900;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .side-by-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .hw-specs {
+    text-align: center;
+    font-size: 0.7rem;
+    color: #8b949e;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    padding: 8px 0;
+  }
+  .hw-specs span {
+    background: #161b22;
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid #21262d;
+  }
+
+  .flow-label {
+    font-size: 0.65rem;
+    color: #58a6ff;
+    text-align: center;
+    padding: 2px 0;
+    font-style: italic;
+  }
+
+  .metrics-arrow {
+    position: absolute;
+    right: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #e6522c;
+    font-size: 0.7rem;
+  }
+
+  @media (max-width: 900px) {
+    .gpu-row { grid-template-columns: repeat(2, 1fr); }
+    .side-by-side { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Splinter GPU Server Architecture</h1>
+<p class="subtitle">Dell PowerEdge R760XA &mdash; 4x NVIDIA H100 NVL &mdash; Ubuntu 22.04 Bare Metal</p>
+
+<div class="hw-specs">
+  <span>2x Xeon Gold 6548N (64C/128T)</span>
+  <span>1 TB DDR5 RAM</span>
+  <span>4x H100 NVL (376 GB HBM3)</span>
+  <span>2x 1.92 TB SAS SSD</span>
+  <span>25 GbE NIC</span>
+</div>
+
+<div class="diagram">
+
+  <!-- Internet -->
+  <div class="row">
+    <div class="box internet">
+      <div class="name">Internet / Clients</div>
+      <div class="detail">OpenAI-compatible API requests</div>
+      <div class="port">HTTPS :443</div>
+    </div>
+  </div>
+
+  <div class="arrow-down">&darr;</div>
+
+  <!-- Security Layer -->
+  <div class="layer" style="border-color: #2ea043;">
+    <div class="layer-label" style="color: #2ea043;">Security & Ingress</div>
+    <div class="row">
+      <div class="box nginx">
+        <div class="name">Nginx</div>
+        <div class="detail">TLS termination, rate limiting<br>1000 req/s, path blocking<br>security headers, streaming</div>
+        <div class="port">:443 &rarr; localhost:4000</div>
+      </div>
+      <div class="box fail2ban">
+        <div class="name">Fail2ban</div>
+        <div class="detail">4 jails: sshd, blocked,<br>auth failures, login attempts<br>Exponential backoff bans</div>
+        <div class="port">iptables rules</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down">&darr;</div>
+  <div class="flow-label">Bearer sk-*** token validated &rarr; proxied to LiteLLM</div>
+
+  <!-- LiteLLM Layer -->
+  <div class="layer" style="border-color: #388bfd;">
+    <div class="layer-label" style="color: #388bfd;">API Gateway & Routing</div>
+    <div class="row">
+      <div class="box litellm">
+        <div class="name">LiteLLM Proxy</div>
+        <div class="detail">Multi-model routing, API key mgmt<br>User/team quotas, usage tracking<br>OpenAI-compatible unified API</div>
+        <div class="port">:4000</div>
+      </div>
+      <div class="box postgres">
+        <div class="name">PostgreSQL 16</div>
+        <div class="detail">Keys, users, teams<br>usage statistics</div>
+        <div class="port">:5432 (internal)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down">&darr;</div>
+  <div class="flow-label">Routed to backend model by LiteLLM config</div>
+
+  <!-- GPU Layer -->
+  <div class="layer" style="border-color: #76b900;">
+    <div class="layer-label" style="color: #76b900;">GPU Inference Layer &mdash; 4x NVIDIA H100 NVL (94 GB HBM3 each)</div>
+
+    <div class="gpu-row">
+      <!-- GPU 0 -->
+      <div class="gpu-card">
+        <div class="gpu-label">GPU 0</div>
+        <div class="gpu-hw">H100 NVL &bull; 94 GB</div>
+        <div class="services">
+          <div class="box vllm">
+            <div class="name">vLLM</div>
+            <div class="detail">gpt-oss-120b<br>Tensor Parallel (0+1)<br>80% VRAM, 32K ctx</div>
+            <div class="port">:8000</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GPU 1 -->
+      <div class="gpu-card">
+        <div class="gpu-label">GPU 1</div>
+        <div class="gpu-hw">H100 NVL &bull; 94 GB</div>
+        <div class="services">
+          <div class="box vllm">
+            <div class="name">vLLM</div>
+            <div class="detail">gpt-oss-120b<br>Tensor Parallel (0+1)<br>80% VRAM, 32K ctx</div>
+            <div class="port">:8000 (shared)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GPU 2 -->
+      <div class="gpu-card">
+        <div class="gpu-label">GPU 2</div>
+        <div class="gpu-hw">H100 NVL &bull; 94 GB</div>
+        <div class="services">
+          <div class="box vllm">
+            <div class="name">vLLM</div>
+            <div class="detail">Qwen3.5-27B-FP8<br>85% VRAM, 32K ctx<br>Reasoning + tools</div>
+            <div class="port">:8001</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GPU 3 -->
+      <div class="gpu-card">
+        <div class="gpu-label">GPU 3 (Shared)</div>
+        <div class="gpu-hw">H100 NVL &bull; 94 GB</div>
+        <div class="services">
+          <div class="box vllm" style="padding: 6px 8px;">
+            <div class="name" style="font-size:0.8rem;">vLLM Embedding</div>
+            <div class="detail">Qwen3-Embedding-4B<br>12% VRAM</div>
+            <div class="port">:8002</div>
+          </div>
+          <div class="box sglang" style="padding: 6px 8px;">
+            <div class="name" style="font-size:0.8rem;">SGLang Diffusion</div>
+            <div class="detail">Z-Image-Turbo</div>
+            <div class="port">:8003</div>
+          </div>
+          <div class="box sglang" style="padding: 6px 8px;">
+            <div class="name" style="font-size:0.8rem;">SGLang Image Edit</div>
+            <div class="detail">Qwen-Image-Edit</div>
+            <div class="port">:8004</div>
+          </div>
+          <div class="box audio" style="padding: 6px 8px;">
+            <div class="name" style="font-size:0.8rem;">Speaches</div>
+            <div class="detail">Whisper + Kokoro TTS</div>
+            <div class="port">:8000</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NVLink -->
+    <div style="display: flex; justify-content: center; margin-top: 10px;">
+      <div style="display: flex; align-items: center; gap: 8px; background: rgba(118,185,0,0.08); border-radius: 6px; padding: 4px 16px;">
+        <span class="nvlink-label">NVLink Bridge</span>
+        <span style="font-size:0.6rem; color:#76b900; opacity:0.6;">GPU 0 &harr; GPU 1 &nbsp;|&nbsp; GPU 2 &harr; GPU 3</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monitoring -->
+  <div class="layer" style="border-color: #6e7681; margin-top: 8px;">
+    <div class="layer-label" style="color: #6e7681;">Monitoring Stack (all bound to 127.0.0.1 &mdash; SSH tunnel access)</div>
+    <div class="row">
+      <div class="box prom">
+        <div class="name">Prometheus</div>
+        <div class="detail">Scrapes all services @15s<br>30-day retention</div>
+        <div class="port">:9090</div>
+      </div>
+      <div class="box grafana">
+        <div class="name">Grafana</div>
+        <div class="detail">Dashboards & visualization<br>Auto-provisioned</div>
+        <div class="port">:3000</div>
+      </div>
+      <div class="box exporter">
+        <div class="name">Node Exporter</div>
+        <div class="detail">CPU, RAM, disk, net</div>
+        <div class="port">:9100</div>
+      </div>
+      <div class="box exporter">
+        <div class="name">DCGM Exporter</div>
+        <div class="detail">GPU util, temp, power</div>
+        <div class="port">:9400</div>
+      </div>
+      <div class="box exporter">
+        <div class="name">F2B Geo Exporter</div>
+        <div class="detail">Ban geo data &rarr; Prometheus</div>
+        <div class="port">:9122</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deployment -->
+  <div class="layer" style="border-color: #30363d; margin-top: 8px;">
+    <div class="layer-label" style="color: #8b949e;">Deployment & Management</div>
+    <div class="row">
+      <div class="box" style="background: #161b22; border: 1.5px solid #30363d;">
+        <div class="name">Ansible Playbooks</div>
+        <div class="detail">setup &bull; llm-service &bull; monitoring<br>service-control &bull; nuke-from-orbit</div>
+      </div>
+      <div class="box" style="background: #161b22; border: 1.5px solid #30363d;">
+        <div class="name">Docker Compose</div>
+        <div class="detail">2 stacks: llm-service + monitoring<br>Shared monitoring network</div>
+      </div>
+      <div class="box" style="background: #161b22; border: 1.5px solid #30363d;">
+        <div class="name">Let's Encrypt</div>
+        <div class="detail">Certbot TLS certificates<br>Auto-renewal</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<p style="text-align:center; margin-top: 24px; font-size: 0.65rem; color: #484f58;">
+  Generated from /opt/splinter repository &mdash; Splinter GPU Server Infrastructure Diagram
+</p>
+
+</body>
+</html>

@@ -1,123 +1,457 @@
 {
   "annotations": {
-    "list": []
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
   },
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
-  "id": null,
   "links": [],
   "panels": [
     {
-      "type": "stat",
-      "title": "Unique Banned IPs",
-      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 5 },
-              { "color": "red", "value": 20 }
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
             ]
           }
         },
         "overrides": []
       },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "colorMode": "background",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto"
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
+      "pluginVersion": "12.4.1",
       "targets": [
         {
           "expr": "count(${view}{jail=~\"$jail\"} >= ${__from})",
+          "instant": true,
           "legendFormat": "Banned IPs",
-          "refId": "A",
-          "instant": true
+          "refId": "A"
         }
-      ]
+      ],
+      "title": "Unique Banned IPs",
+      "type": "stat"
     },
     {
-      "type": "stat",
-      "title": "Total Ban Events",
-      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "color": "blue", "value": null },
-              { "color": "yellow", "value": 50 },
-              { "color": "red", "value": 200 }
+              {
+                "color": "blue",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 200
+              }
             ]
           }
         },
         "overrides": []
       },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      },
+      "id": 2,
       "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
         "colorMode": "background",
         "graphMode": "none",
         "justifyMode": "auto",
-        "textMode": "auto"
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
+      "pluginVersion": "12.4.1",
       "targets": [
         {
           "expr": "count(fail2ban_ban_event{jail=~\"$jail\"} >= ${__from})",
+          "instant": true,
           "legendFormat": "Total Bans",
-          "refId": "A",
-          "instant": true
+          "refId": "A"
         }
-      ]
+      ],
+      "title": "Total Ban Events",
+      "type": "stat"
     },
     {
-      "type": "barchart",
-      "title": "Banned IPs by Jail",
-      "gridPos": { "h": 4, "w": 12, "x": 12, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" }
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
         },
         "overrides": []
       },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 8,
+        "y": 0
+      },
+      "id": 3,
       "options": {
+        "barRadius": 0,
+        "barWidth": 0.8,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
         "orientation": "horizontal",
         "showValue": "always",
         "stacking": "none",
-        "barWidth": 0.8
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
       },
+      "pluginVersion": "12.4.1",
       "targets": [
         {
           "expr": "count by (jail) (${view}{jail=~\"$jail\"} >= ${__from})",
+          "instant": true,
           "legendFormat": "{{ jail }}",
-          "refId": "A",
-          "instant": true
+          "refId": "A"
         }
-      ]
+      ],
+      "title": "Banned IPs by Jail",
+      "type": "barchart"
     },
     {
-      "type": "geomap",
-      "title": "Banned IP Locations",
-      "gridPos": { "h": 16, "w": 24, "x": 0, "y": 4 },
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "options": {
-        "view": {
-          "id": "zero",
-          "lat": 20,
-          "lon": 0,
-          "zoom": 2
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.9,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
         },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "expr": "fail2ban_bans_per_hour{jail=~\"$jail\"} > 0",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "{{ jail }}",
+          "refId": "A"
+        }
+      ],
+      "title": "Ban Events Over Time",
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "jail",
+                "bucket",
+                "Value"
+              ]
+            }
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "destinationType": "number",
+                "targetField": "bucket"
+              }
+            ]
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "conversions": [
+              {
+                "destinationType": "time",
+                "targetField": "bucket"
+              }
+            ]
+          }
+        },
+        {
+          "id": "partitionByValues",
+          "options": {
+            "fields": [
+              "jail"
+            ],
+            "keepFields": false
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "active"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "options": {
+                      "Banned": {
+                        "color": "red"
+                      },
+                      "Unbanned": {
+                        "color": "green"
+                      }
+                    },
+                    "type": "value"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 24,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "id": 4,
+      "options": {
         "basemap": {
           "config": {},
           "name": "Layer 0",
           "type": "default"
+        },
+        "controls": {
+          "mouseWheelZoom": true,
+          "showAttribution": true,
+          "showDebug": false,
+          "showMeasure": false,
+          "showScale": false,
+          "showZoom": true
         },
         "layers": [
           {
@@ -129,9 +463,21 @@
                   "fixed": "red"
                 },
                 "opacity": 0.7,
-                "rotation": { "fixed": 0, "max": 360, "min": -360, "mode": "fixed" },
-                "size": { "fixed": 8, "max": 20, "min": 4 },
-                "symbol": { "fixed": "img/icons/marker/circle.svg", "mode": "fixed" },
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "fixed"
+                },
+                "size": {
+                  "fixed": 8,
+                  "max": 20,
+                  "min": 4
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/circle.svg",
+                  "mode": "fixed"
+                },
                 "textConfig": {
                   "fontSize": 12,
                   "offsetX": 0,
@@ -142,32 +488,53 @@
               }
             },
             "location": {
-              "mode": "coords",
               "latitude": "latitude",
-              "longitude": "longitude"
+              "longitude": "longitude",
+              "mode": "coords"
             },
             "name": "Banned IPs",
             "tooltip": true,
             "type": "markers"
           }
         ],
-        "tooltip": { "mode": "details" }
+        "tooltip": {
+          "mode": "details"
+        },
+        "view": {
+          "allLayers": true,
+          "id": "zero",
+          "lat": 20,
+          "lon": 0,
+          "noRepeat": false,
+          "zoom": 2
+        }
       },
+      "pluginVersion": "12.4.1",
       "targets": [
         {
           "expr": "${view}{jail=~\"$jail\"} >= ${__from}",
-          "legendFormat": "{{ ip }} ({{ jail }}) - {{ city }}, {{ country }}",
-          "refId": "A",
+          "format": "table",
           "instant": true,
-          "format": "table"
+          "legendFormat": "{{ ip }} ({{ jail }}) - {{ city }}, {{ country }}",
+          "refId": "A"
         }
       ],
+      "title": "Banned IP Locations",
       "transformations": [
         {
           "id": "filterFieldsByName",
           "options": {
             "include": {
-              "names": ["ip", "jail", "country", "city", "active", "latitude", "longitude", "Value"]
+              "names": [
+                "ip",
+                "jail",
+                "country",
+                "city",
+                "active",
+                "latitude",
+                "longitude",
+                "Value"
+              ]
             }
           }
         },
@@ -175,220 +542,308 @@
           "id": "convertFieldType",
           "options": {
             "conversions": [
-              { "targetField": "latitude", "destinationType": "number" },
-              { "targetField": "longitude", "destinationType": "number" }
+              {
+                "destinationType": "number",
+                "targetField": "latitude"
+              },
+              {
+                "destinationType": "number",
+                "targetField": "longitude"
+              }
             ]
           }
         }
       ],
+      "type": "geomap"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
-        "defaults": {},
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "footer": {
+              "reducers": [
+                "countAll"
+              ]
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "active" },
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeAsIsoNoDateIfToday"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom.viz",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "active"
+            },
             "properties": [
               {
                 "id": "mappings",
                 "value": [
                   {
-                    "type": "value",
                     "options": {
-                      "Banned": { "color": "red" },
-                      "Unbanned": { "color": "green" }
-                    }
+                      "Banned": {
+                        "color": "red",
+                        "text": "Banned"
+                      },
+                      "Unbanned": {
+                        "color": "green",
+                        "text": "Unbanned"
+                      }
+                    },
+                    "type": "value"
                   }
                 ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
               }
             ]
           }
         ]
-      }
-    },
-    {
-      "type": "timeseries",
-      "title": "Ban Events Over Time",
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "fieldConfig": {
-        "defaults": {
-          "color": { "mode": "palette-classic" },
-          "custom": {
-            "drawStyle": "bars",
-            "fillOpacity": 80,
-            "pointSize": 5,
-            "lineWidth": 1,
-            "stacking": { "mode": "normal" },
-            "barAlignment": 0,
-            "barWidthFactor": 0.9
-          }
-        },
-        "overrides": []
       },
+      "gridPos": {
+        "h": 24,
+        "w": 6,
+        "x": 12,
+        "y": 6
+      },
+      "id": 6,
       "options": {
-        "legend": { "displayMode": "list", "placement": "bottom" },
-        "tooltip": { "mode": "multi", "sort": "desc" }
-      },
-      "targets": [
-        {
-          "expr": "fail2ban_bans_per_hour{jail=~\"$jail\"} > 0",
-          "legendFormat": "{{ jail }}",
-          "refId": "A",
-          "instant": true,
-          "format": "table"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "filterFieldsByName",
-          "options": {
-            "include": {
-              "names": ["jail", "bucket", "Value"]
-            }
-          }
-        },
-        {
-          "id": "convertFieldType",
-          "options": {
-            "conversions": [
-              { "targetField": "bucket", "destinationType": "number" }
-            ]
-          }
-        },
-        {
-          "id": "convertFieldType",
-          "options": {
-            "conversions": [
-              { "targetField": "bucket", "destinationType": "time" }
-            ]
-          }
-        },
-        {
-          "id": "partitionByValues",
-          "options": {
-            "fields": ["jail"],
-            "keepFields": false
-          }
-        }
-      ]
-    },
-    {
-      "type": "table",
-      "title": "Ban Events",
-      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 28 },
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": [
+        "cellHeight": "sm",
+        "showHeader": true,
+        "sortBy": [
           {
-            "matcher": { "id": "byName", "options": "Value" },
-            "properties": [
-              { "id": "custom.displayName", "value": "Banned At" },
-              { "id": "unit", "value": "dateTimeAsIsoNoDateIfToday" }
-            ]
-          },
-          {
-            "matcher": { "id": "byName", "options": "Time" },
-            "properties": [
-              { "id": "custom.hidden", "value": true }
-            ]
-          },
-          {
-            "matcher": { "id": "byName", "options": "active" },
-            "properties": [
-              { "id": "custom.displayName", "value": "Status" },
-              { "id": "mappings", "value": [
-                { "type": "value", "options": { "Banned": { "text": "Banned", "color": "red" }, "Unbanned": { "text": "Unbanned", "color": "green" } } }
-              ]},
-              { "id": "custom.cellOptions", "value": { "type": "color-text" } }
-            ]
+            "desc": true,
+            "displayName": "Banned At"
           }
         ]
       },
-      "options": {
-        "showHeader": true,
-        "sortBy": [{ "displayName": "Banned At", "desc": true }],
-        "footer": { "show": true, "reducer": ["count"], "countRows": true }
-      },
+      "pluginVersion": "12.4.1",
       "targets": [
         {
           "expr": "${view}{jail=~\"$jail\"} >= ${__from}",
-          "legendFormat": "",
-          "refId": "A",
+          "format": "table",
           "instant": true,
-          "format": "table"
+          "legendFormat": "",
+          "refId": "A"
         }
       ],
+      "title": "Ban Events",
       "transformations": [
         {
           "id": "filterFieldsByName",
           "options": {
             "include": {
-              "names": ["ip", "jail", "country", "city", "active", "latitude", "longitude", "Value", "Time"]
+              "names": [
+                "ip",
+                "jail",
+                "country",
+                "city",
+                "active",
+                "latitude",
+                "longitude",
+                "Value",
+                "Time"
+              ]
             }
           }
         }
-      ]
+      ],
+      "type": "table"
     },
     {
-      "type": "piechart",
-      "title": "Bans by Country",
-      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 38 },
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" }
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
         },
         "overrides": []
       },
-      "options": {
-        "reduceOptions": { "calcs": ["sum"], "fields": "", "values": false },
-        "pieType": "donut",
-        "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] },
-        "tooltip": { "mode": "single" }
+      "gridPos": {
+        "h": 12,
+        "w": 6,
+        "x": 18,
+        "y": 6
       },
+      "id": 7,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "sort": "desc",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.4.1",
       "targets": [
         {
           "expr": "count by (country) (${view}{jail=~\"$jail\"} >= ${__from})",
+          "instant": true,
           "legendFormat": "{{ country }}",
-          "refId": "A",
-          "instant": true
+          "refId": "A"
         }
-      ]
+      ],
+      "title": "Bans by Country",
+      "type": "piechart"
     },
     {
-      "type": "piechart",
-      "title": "Bans by Jail",
-      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 38 },
-      "datasource": { "type": "prometheus", "uid": "${datasource}" },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${datasource}"
+      },
       "fieldConfig": {
         "defaults": {
-          "color": { "mode": "palette-classic" }
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
         },
         "overrides": []
       },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
-        "pieType": "donut",
-        "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] },
-        "tooltip": { "mode": "single" }
+      "gridPos": {
+        "h": 12,
+        "w": 6,
+        "x": 18,
+        "y": 18
       },
+      "id": 8,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "sort": "desc",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.4.1",
       "targets": [
         {
           "expr": "count by (jail) (fail2ban_ban_event{jail=~\"$jail\"} >= ${__from})",
+          "instant": true,
           "legendFormat": "{{ jail }}",
-          "refId": "A",
-          "instant": true
+          "refId": "A"
         }
-      ]
+      ],
+      "title": "Bans by Jail",
+      "type": "piechart"
     }
   ],
+  "preload": false,
   "refresh": "30s",
-  "schemaVersion": 39,
-  "tags": ["fail2ban", "security"],
+  "schemaVersion": 42,
+  "tags": [
+    "fail2ban",
+    "security"
+  ],
   "templating": {
     "list": [
       {
-        "current": { "selected": false, "text": "Prometheus", "value": "Prometheus" },
+        "current": {
+          "text": "Prometheus",
+          "value": "Prometheus"
+        },
         "hide": 2,
         "includeAll": false,
         "name": "datasource",
@@ -398,41 +853,65 @@
         "type": "datasource"
       },
       {
-        "current": { "selected": false, "text": "Current", "value": "fail2ban_banned_ip" },
-        "hide": 0,
+        "current": {
+          "text": "Current",
+          "value": "fail2ban_banned_ip"
+        },
         "includeAll": false,
-        "multi": false,
-        "name": "view",
         "label": "View",
+        "name": "view",
         "options": [
-          { "selected": true, "text": "Current", "value": "fail2ban_banned_ip" },
-          { "selected": false, "text": "All Time", "value": "fail2ban_banned_ip_historical" }
+          {
+            "selected": true,
+            "text": "Current",
+            "value": "fail2ban_banned_ip"
+          },
+          {
+            "selected": false,
+            "text": "All Time",
+            "value": "fail2ban_banned_ip_historical"
+          }
         ],
         "query": "Current : fail2ban_banned_ip, All Time : fail2ban_banned_ip_historical",
-        "type": "custom"
+        "type": "custom",
+        "valuesFormat": "csv"
       },
       {
         "allValue": ".*",
-        "current": { "selected": true, "text": "All", "value": "$__all" },
-        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${datasource}"
+        },
         "definition": "label_values(fail2ban_banned_current, jail)",
-        "hide": 0,
         "includeAll": true,
+        "label": "Jail",
         "multi": true,
         "name": "jail",
         "options": [],
-        "query": { "qryType": 1, "query": "label_values(fail2ban_banned_current, jail)", "refId": "PrometheusVariableQueryEditor-VariableQuery" },
+        "query": {
+          "qryType": 1,
+          "query": "label_values(fail2ban_banned_current, jail)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
         "refresh": 2,
+        "regexApplyTo": "value",
         "sort": 1,
-        "type": "query",
-        "label": "Jail"
+        "type": "query"
       }
     ]
   },
-  "time": { "from": "now-24h", "to": "now" },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "browser",
   "title": "Fail2ban Geo Map",
   "uid": "fail2ban-geo",
-  "version": 8
+  "version": 19,
+  "weekStart": ""
 }
