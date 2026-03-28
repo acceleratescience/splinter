@@ -59,10 +59,24 @@ services:
       - "127.0.0.1:3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+
+  # Fail2ban Geo Exporter
+  fail2ban-geo-exporter:
+    build: ./fail2ban-geo-exporter
+    container_name: monitoring-fail2ban-geo
+    restart: always
+    volumes:
+      - /var/log/fail2ban.log:/var/log/fail2ban.log:ro
+      - fail2ban_geoip_data:/data/geoip
+    ports:
+      - "127.0.0.1:9122:9122"
 
 volumes:
   prometheus_data:
   grafana_data:
+  fail2ban_geoip_data:
 
 networks:
   default:

@@ -1,0 +1,13 @@
+[project]
+name = "fail2ban-geo-exporter"
+version = "0.1.0"
+description = "Prometheus exporter for fail2ban with GeoIP enrichment"
+requires-python = ">=3.12"
+dependencies = [
+    "prometheus_client>=0.21.1",
+    "geoip2>=4.8.1",
+    "requests>=2.32.3",
+]
+
+[project.optional-dependencies]
+monitoring = []
