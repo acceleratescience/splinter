@@ -94,19 +94,18 @@ We offer this with the only caveat that many areas may be... suboptimal. If that
 
 # Quick Start
 
-1. Clone this repository
-2. Copy example files and configure for your environment:
+1. Clone this repository on your GPU server
+2. Run the setup script to install base dependencies, Docker, and NVIDIA drivers:
 ```bash
-   cp ansible/inventory.ini.example ansible/inventory.ini
-   # Edit inventory.ini with your server details
+sudo ./scripts/setup.sh
 ```
-3. Run the bootstrap playbook to set up the base system:
+3. Deploy the monitoring stack:
 ```bash
-   ansible-playbook -i ansible/inventory.ini ansible/playbooks/setup.yml
+./scripts/monitoring.sh
 ```
-4. Deploy the monitoring stack:
+4. Deploy the LLM service:
 ```bash
-   ansible-playbook -i ansible/inventory.ini ansible/playbooks/monitoring.yml
+./scripts/monitoring.sh
 ```
 
 # Repository Structure
@@ -128,7 +127,6 @@ stacks/           # Docker Compose definitions for each service
 - Ubuntu 22.04 LTS (server)
 - NVIDIA GPU with recent drivers
 - Docker and Docker Compose
-- Ansible (on your local machine, for deployment)
 
 # License
 
