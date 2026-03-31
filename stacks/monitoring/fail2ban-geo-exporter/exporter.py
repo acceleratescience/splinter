@@ -1,5 +1,6 @@
 """Fail2ban Geo Exporter - Prometheus exporter for fail2ban with GeoIP enrichment."""
 
+import glob
 import gzip
 import logging
 import os
@@ -177,6 +178,38 @@ class Fail2banLogParser:
         """Convert fail2ban log timestamp to unix epoch milliseconds."""
         return datetime.strptime(ts, "%Y-%m-%d %H:%M:%S").timestamp() * 1000
 
+    def _process_line(self, line: str):
+        """Process a single log line, updating ban/unban state."""
+        line = line.strip()
+        ban_match = BAN_RE.match(line)
+        if ban_match:
+            timestamp, jail, ip = ban_match.groups()
+            epoch = self._parse_timestamp(timestamp)
+            self.banned.setdefault(jail, {})[ip] = epoch
+            self.all_banned.setdefault(jail, {})[ip] = epoch
+            self.ban_events.append((self._next_event_id, jail, ip, epoch))
+            self._next_event_id += 1
+            return
+
+        unban_match = UNBAN_RE.match(line)
+        if unban_match:
+            _, jail, ip = unban_match.groups()
+            if jail in self.banned:
+                self.banned[jail].pop(ip, None)
+
+    def parse_file(self, log_path: str):
+        """Parse an entire log file (plain or gzipped) without position tracking."""
+        opener = gzip.open if log_path.endswith(".gz") else open
+        try:
+            with opener(log_path, "rt") as f:
+                for line in f:
+                    self._process_line(line)
+            log.info("Backfilled from %s", log_path)
+        except FileNotFoundError:
+            log.warning("Log file not found: %s", log_path)
+        except Exception as e:
+            log.warning("Error reading %s: %s", log_path, e)
+
     def parse(self, log_path: str):
         """Read new lines from fail2ban log and update state."""
         try:
@@ -202,23 +235,7 @@ class Fail2banLogParser:
         with open(log_path, "r") as f:
             f.seek(self.last_position)
             for line in f:
-                line = line.strip()
-                ban_match = BAN_RE.match(line)
-                if ban_match:
-                    timestamp, jail, ip = ban_match.groups()
-                    epoch = self._parse_timestamp(timestamp)
-                    self.banned.setdefault(jail, {})[ip] = epoch
-                    self.all_banned.setdefault(jail, {})[ip] = epoch
-                    self.ban_events.append((self._next_event_id, jail, ip, epoch))
-                    self._next_event_id += 1
-                    continue
-
-                unban_match = UNBAN_RE.match(line)
-                if unban_match:
-                    _, jail, ip = unban_match.groups()
-                    if jail in self.banned:
-                        self.banned[jail].pop(ip, None)
-
+                self._process_line(line)
             self.last_position = f.tell()
 
 
@@ -287,6 +304,24 @@ def update_metrics(parser: Fail2banLogParser, geo: GeoResolver):
         BANS_PER_HOUR.labels(jail=jail, bucket=str(bucket)).set(count)
 
 
+def rotated_log_files(log_path: str) -> list[str]:
+    """Return rotated log files for log_path sorted oldest-first.
+
+    Handles both plain (.log.1) and gzipped (.log.2.gz, .log.3.gz, ...) files.
+    Oldest files have the highest numeric suffix and must be parsed first so
+    that ban/unban state is built up in chronological order.
+    """
+    directory = os.path.dirname(log_path) or "."
+    base = os.path.basename(log_path)
+    matches = glob.glob(os.path.join(directory, base + ".*"))
+
+    def _suffix_number(path: str) -> int:
+        m = re.search(r"\.(\d+)", os.path.basename(path))
+        return int(m.group(1)) if m else 0
+
+    return sorted(matches, key=_suffix_number, reverse=True)
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -302,6 +337,11 @@ def main():
 
     geo = GeoResolver(GEOIP_DB_PATH)
     parser = Fail2banLogParser()
+
+    # Backfill from all rotated logs (oldest first) so the full ban history is
+    # visible in the dashboard immediately after a container restart.
+    for rotated in rotated_log_files(FAIL2BAN_LOG):
+        parser.parse_file(rotated)
 
     start_http_server(EXPORTER_PORT)
     log.info("Prometheus metrics server started on :%d", EXPORTER_PORT)
