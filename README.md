@@ -27,7 +27,7 @@
 <br />
 <div align="center">
   <a>
-    <img src="./docs/assets/imgs/splinter_2.png" alt="Logo" height=100 style="vertical-align: middle;">
+    <img src="./docs/assets/imgs/splinter_3.png" alt="Logo" height=100 style="vertical-align: middle;">
   </a>
 
   <h3 align="center">Accelerate Science GPU Server Infrastructure</h3>
