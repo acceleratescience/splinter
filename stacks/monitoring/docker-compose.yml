@@ -68,7 +68,7 @@ services:
     container_name: monitoring-fail2ban-geo
     restart: always
     volumes:
-      - /var/log/fail2ban.log:/var/log/fail2ban.log:ro
+      - /var/log:/var/log:ro
       - fail2ban_geoip_data:/data/geoip
     ports:
       - "127.0.0.1:9122:9122"

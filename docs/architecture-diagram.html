@@ -11,201 +11,308 @@
     background: #0d1117;
     color: #c9d1d9;
     min-height: 100vh;
-    padding: 24px;
+    padding: 48px;
+    font-size: 18px;
   }
   h1 {
     text-align: center;
-    font-size: 1.6rem;
+    font-size: 2.4rem;
     color: #58a6ff;
-    margin-bottom: 6px;
+    margin-bottom: 10px;
   }
   .subtitle {
     text-align: center;
-    font-size: 0.85rem;
+    font-size: 1.2rem;
     color: #8b949e;
-    margin-bottom: 24px;
+    margin-bottom: 36px;
   }
-  .diagram {
-    max-width: 1300px;
+
+  /* Main two-column layout */
+  .main-layout {
+    max-width: 2000px;
     margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 32px;
+    align-items: start;
+  }
+
+  .diagram {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 24px;
   }
   .layer {
-    border: 1.5px solid #30363d;
-    border-radius: 12px;
-    padding: 16px;
+    border: 2.5px solid #30363d;
+    border-radius: 16px;
+    padding: 28px;
     position: relative;
   }
   .layer-label {
     position: absolute;
-    top: -10px;
-    left: 16px;
+    top: -14px;
+    left: 24px;
     background: #0d1117;
-    padding: 0 8px;
-    font-size: 0.7rem;
+    padding: 0 12px;
+    font-size: 0.85rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 1.2px;
+    letter-spacing: 1.5px;
     color: #8b949e;
   }
   .row {
     display: flex;
-    gap: 12px;
+    gap: 20px;
     flex-wrap: wrap;
     justify-content: center;
   }
   .box {
-    border-radius: 8px;
-    padding: 12px 16px;
-    min-width: 160px;
+    border-radius: 12px;
+    padding: 18px 24px;
+    min-width: 220px;
     text-align: center;
     position: relative;
   }
   .box .name {
-    font-weight: 600;
-    font-size: 0.9rem;
-    margin-bottom: 4px;
+    font-weight: 700;
+    font-size: 1.15rem;
+    margin-bottom: 6px;
   }
   .box .detail {
-    font-size: 0.72rem;
-    opacity: 0.75;
-    line-height: 1.4;
+    font-size: 0.88rem;
+    opacity: 0.8;
+    line-height: 1.5;
   }
   .box .port {
     display: inline-block;
-    background: rgba(0,0,0,0.3);
-    border-radius: 4px;
-    padding: 1px 6px;
-    font-size: 0.65rem;
+    background: rgba(0,0,0,0.35);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 0.82rem;
     font-family: 'SF Mono', 'Fira Code', monospace;
-    margin-top: 4px;
+    margin-top: 6px;
   }
 
   /* Color schemes */
-  .internet { background: #1a1e2e; border: 1.5px solid #484f78; }
-  .nginx { background: #1a2e1a; border: 1.5px solid #2ea043; }
-  .fail2ban { background: #2e1a1a; border: 1.5px solid #da3633; }
-  .litellm { background: #1a2a3e; border: 1.5px solid #388bfd; }
-  .postgres { background: #1e2a38; border: 1.5px solid #3572A5; }
-  .vllm { background: #2a1e38; border: 1.5px solid #a371f7; }
-  .sglang { background: #2e2a1a; border: 1.5px solid #d29922; }
-  .audio { background: #1a2e2e; border: 1.5px solid #2ea098; }
-  .gpu { background: #1e1e1e; border: 1.5px dashed #76b900; }
-  .monitoring { background: #1a1a2e; border: 1.5px solid #6e7681; }
-  .prom { background: #2e1e1a; border: 1.5px solid #e6522c; }
-  .grafana { background: #2e2a1a; border: 1.5px solid #f46800; }
-  .exporter { background: #1a2222; border: 1.5px solid #4a8c6f; }
+  .internet { background: #1a1e2e; border: 2.5px solid #484f78; }
+  .nginx { background: #1a2e1a; border: 2.5px solid #2ea043; }
+  .fail2ban { background: #2e1a1a; border: 2.5px solid #da3633; }
+  .litellm { background: #1a2a3e; border: 2.5px solid #388bfd; }
+  .postgres { background: #1e2a38; border: 2.5px solid #3572A5; }
+  .vllm { background: #2a1e38; border: 2.5px solid #a371f7; }
+  .sglang { background: #2e2a1a; border: 2.5px solid #d29922; }
+  .audio { background: #1a2e2e; border: 2.5px solid #2ea098; }
+  .gpu { background: #1e1e1e; border: 2.5px dashed #76b900; }
+  .monitoring { background: #1a1a2e; border: 2.5px solid #6e7681; }
+  .prom { background: #2e1e1a; border: 2.5px solid #e6522c; }
+  .grafana { background: #2e2a1a; border: 2.5px solid #f46800; }
+  .exporter { background: #1a2222; border: 2.5px solid #4a8c6f; }
 
   .arrow-down {
     text-align: center;
-    color: #484f58;
-    font-size: 1.2rem;
+    color: #58a6ff;
+    font-size: 2rem;
     line-height: 1;
-    padding: 2px 0;
+    padding: 4px 0;
   }
 
   .gpu-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
+    gap: 18px;
   }
   .gpu-card {
-    border: 1.5px dashed #76b900;
-    border-radius: 8px;
-    padding: 10px;
+    border: 2.5px dashed #76b900;
+    border-radius: 12px;
+    padding: 16px;
     background: #111a0d;
   }
   .gpu-card .gpu-label {
-    font-size: 0.7rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: #76b900;
-    margin-bottom: 6px;
+    margin-bottom: 8px;
     text-align: center;
   }
   .gpu-card .gpu-hw {
-    font-size: 0.6rem;
+    font-size: 0.8rem;
     color: #76b900;
     opacity: 0.6;
     text-align: center;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
   }
   .gpu-card .services {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 10px;
   }
   .gpu-card .box {
     min-width: unset;
-    padding: 8px 10px;
-  }
-  .nvlink-bridge {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin: -6px 0;
-    position: relative;
-    z-index: 1;
-  }
-  .nvlink-line {
-    height: 0;
-    border-top: 2px dashed #76b900;
-    flex: 1;
-    max-width: 80px;
-    opacity: 0.5;
+    padding: 12px 14px;
   }
   .nvlink-label {
-    font-size: 0.6rem;
+    font-size: 0.8rem;
     color: #76b900;
     font-weight: 600;
     white-space: nowrap;
   }
 
-  .side-by-side {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
   .hw-specs {
     text-align: center;
-    font-size: 0.7rem;
+    font-size: 0.95rem;
     color: #8b949e;
     display: flex;
     justify-content: center;
-    gap: 24px;
+    gap: 28px;
     flex-wrap: wrap;
-    padding: 8px 0;
+    padding: 12px 0;
   }
   .hw-specs span {
     background: #161b22;
-    padding: 3px 10px;
-    border-radius: 12px;
-    border: 1px solid #21262d;
+    padding: 6px 16px;
+    border-radius: 16px;
+    border: 1.5px solid #21262d;
   }
 
   .flow-label {
-    font-size: 0.65rem;
+    font-size: 0.85rem;
     color: #58a6ff;
     text-align: center;
-    padding: 2px 0;
+    padding: 4px 0;
     font-style: italic;
   }
 
-  .metrics-arrow {
-    position: absolute;
-    right: -20px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #e6522c;
-    font-size: 0.7rem;
+  /* Sidebar styles */
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: sticky;
+    top: 48px;
+  }
+  .sidebar-panel {
+    border: 2px solid #30363d;
+    border-radius: 14px;
+    padding: 20px;
+    background: #161b22;
+  }
+  .sidebar-panel h3 {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1.5px solid #21262d;
+  }
+  .sidebar-panel h3.adr-heading { color: #d2a8ff; }
+  .sidebar-panel h3.docs-heading { color: #58a6ff; }
+
+  .adr-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .adr-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+  .adr-num {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.72rem;
+    color: #d2a8ff;
+    background: rgba(210, 168, 255, 0.1);
+    border: 1px solid rgba(210, 168, 255, 0.2);
+    border-radius: 4px;
+    padding: 1px 6px;
+    flex-shrink: 0;
+    min-width: 36px;
+    text-align: center;
+  }
+  .adr-title {
+    color: #c9d1d9;
+  }
+  .adr-tag {
+    display: inline-block;
+    font-size: 0.62rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 4px;
+    vertical-align: middle;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .tag-accepted { background: rgba(46, 160, 67, 0.15); color: #3fb950; border: 1px solid rgba(46, 160, 67, 0.3); }
+  .tag-proposed { background: rgba(210, 153, 34, 0.15); color: #d29922; border: 1px solid rgba(210, 153, 34, 0.3); }
+
+  .adr-more {
+    font-size: 0.78rem;
+    color: #8b949e;
+    font-style: italic;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid #21262d;
   }
 
-  @media (max-width: 900px) {
+  .doc-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .doc-list li {
+    font-size: 0.82rem;
+    line-height: 1.4;
+    padding-left: 16px;
+    position: relative;
+    color: #c9d1d9;
+  }
+  .doc-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 7px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #58a6ff;
+  }
+  .doc-path {
+    display: block;
+    font-size: 0.7rem;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: #8b949e;
+    margin-top: 2px;
+  }
+
+  /* Connector lines from sidebar to diagram */
+  .connector {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    color: #484f58;
+    margin: 2px 0;
+  }
+  .connector-line {
+    flex: 1;
+    height: 0;
+    border-top: 1.5px dotted #30363d;
+  }
+  .connector-label {
+    white-space: nowrap;
+    color: #6e7681;
+  }
+
+  @media (max-width: 1200px) {
+    .main-layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; }
     .gpu-row { grid-template-columns: repeat(2, 1fr); }
-    .side-by-side { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -222,195 +329,299 @@
   <span>25 GbE NIC</span>
 </div>
 
-<div class="diagram">
+<div class="main-layout">
 
-  <!-- Internet -->
-  <div class="row">
-    <div class="box internet">
-      <div class="name">Internet / Clients</div>
-      <div class="detail">OpenAI-compatible API requests</div>
-      <div class="port">HTTPS :443</div>
-    </div>
-  </div>
+  <!-- Left: Architecture Diagram -->
+  <div class="diagram">
 
-  <div class="arrow-down">&darr;</div>
-
-  <!-- Security Layer -->
-  <div class="layer" style="border-color: #2ea043;">
-    <div class="layer-label" style="color: #2ea043;">Security & Ingress</div>
+    <!-- Internet -->
     <div class="row">
-      <div class="box nginx">
-        <div class="name">Nginx</div>
-        <div class="detail">TLS termination, rate limiting<br>1000 req/s, path blocking<br>security headers, streaming</div>
-        <div class="port">:443 &rarr; localhost:4000</div>
-      </div>
-      <div class="box fail2ban">
-        <div class="name">Fail2ban</div>
-        <div class="detail">4 jails: sshd, blocked,<br>auth failures, login attempts<br>Exponential backoff bans</div>
-        <div class="port">iptables rules</div>
+      <div class="box internet">
+        <div class="name">Internet / Clients</div>
+        <div class="detail">OpenAI-compatible API requests</div>
+        <div class="port">HTTPS :443</div>
       </div>
     </div>
-  </div>
 
-  <div class="arrow-down">&darr;</div>
-  <div class="flow-label">Bearer sk-*** token validated &rarr; proxied to LiteLLM</div>
+    <div class="arrow-down">&darr;</div>
 
-  <!-- LiteLLM Layer -->
-  <div class="layer" style="border-color: #388bfd;">
-    <div class="layer-label" style="color: #388bfd;">API Gateway & Routing</div>
-    <div class="row">
-      <div class="box litellm">
-        <div class="name">LiteLLM Proxy</div>
-        <div class="detail">Multi-model routing, API key mgmt<br>User/team quotas, usage tracking<br>OpenAI-compatible unified API</div>
-        <div class="port">:4000</div>
-      </div>
-      <div class="box postgres">
-        <div class="name">PostgreSQL 16</div>
-        <div class="detail">Keys, users, teams<br>usage statistics</div>
-        <div class="port">:5432 (internal)</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="arrow-down">&darr;</div>
-  <div class="flow-label">Routed to backend model by LiteLLM config</div>
-
-  <!-- GPU Layer -->
-  <div class="layer" style="border-color: #76b900;">
-    <div class="layer-label" style="color: #76b900;">GPU Inference Layer &mdash; 4x NVIDIA H100 NVL (94 GB HBM3 each)</div>
-
-    <div class="gpu-row">
-      <!-- GPU 0 -->
-      <div class="gpu-card">
-        <div class="gpu-label">GPU 0</div>
-        <div class="gpu-hw">H100 NVL &bull; 94 GB</div>
-        <div class="services">
-          <div class="box vllm">
-            <div class="name">vLLM</div>
-            <div class="detail">gpt-oss-120b<br>Tensor Parallel (0+1)<br>80% VRAM, 32K ctx</div>
-            <div class="port">:8000</div>
-          </div>
+    <!-- Security Layer -->
+    <div class="layer" style="border-color: #2ea043;">
+      <div class="layer-label" style="color: #2ea043;">Security & Ingress</div>
+      <div class="row">
+        <div class="box nginx">
+          <div class="name">Nginx</div>
+          <div class="detail">TLS termination, rate limiting<br>1000 req/s, path blocking<br>security headers, streaming</div>
+          <div class="port">:443 &rarr; localhost:4000</div>
         </div>
-      </div>
-
-      <!-- GPU 1 -->
-      <div class="gpu-card">
-        <div class="gpu-label">GPU 1</div>
-        <div class="gpu-hw">H100 NVL &bull; 94 GB</div>
-        <div class="services">
-          <div class="box vllm">
-            <div class="name">vLLM</div>
-            <div class="detail">gpt-oss-120b<br>Tensor Parallel (0+1)<br>80% VRAM, 32K ctx</div>
-            <div class="port">:8000 (shared)</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- GPU 2 -->
-      <div class="gpu-card">
-        <div class="gpu-label">GPU 2</div>
-        <div class="gpu-hw">H100 NVL &bull; 94 GB</div>
-        <div class="services">
-          <div class="box vllm">
-            <div class="name">vLLM</div>
-            <div class="detail">Qwen3.5-27B-FP8<br>85% VRAM, 32K ctx<br>Reasoning + tools</div>
-            <div class="port">:8001</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- GPU 3 -->
-      <div class="gpu-card">
-        <div class="gpu-label">GPU 3 (Shared)</div>
-        <div class="gpu-hw">H100 NVL &bull; 94 GB</div>
-        <div class="services">
-          <div class="box vllm" style="padding: 6px 8px;">
-            <div class="name" style="font-size:0.8rem;">vLLM Embedding</div>
-            <div class="detail">Qwen3-Embedding-4B<br>12% VRAM</div>
-            <div class="port">:8002</div>
-          </div>
-          <div class="box sglang" style="padding: 6px 8px;">
-            <div class="name" style="font-size:0.8rem;">SGLang Diffusion</div>
-            <div class="detail">Z-Image-Turbo</div>
-            <div class="port">:8003</div>
-          </div>
-          <div class="box sglang" style="padding: 6px 8px;">
-            <div class="name" style="font-size:0.8rem;">SGLang Image Edit</div>
-            <div class="detail">Qwen-Image-Edit</div>
-            <div class="port">:8004</div>
-          </div>
-          <div class="box audio" style="padding: 6px 8px;">
-            <div class="name" style="font-size:0.8rem;">Speaches</div>
-            <div class="detail">Whisper + Kokoro TTS</div>
-            <div class="port">:8000</div>
-          </div>
+        <div class="box fail2ban">
+          <div class="name">Fail2ban</div>
+          <div class="detail">4 jails: sshd, blocked,<br>auth failures, login attempts<br>Exponential backoff bans</div>
+          <div class="port">iptables rules</div>
         </div>
       </div>
     </div>
 
-    <!-- NVLink -->
-    <div style="display: flex; justify-content: center; margin-top: 10px;">
-      <div style="display: flex; align-items: center; gap: 8px; background: rgba(118,185,0,0.08); border-radius: 6px; padding: 4px 16px;">
-        <span class="nvlink-label">NVLink Bridge</span>
-        <span style="font-size:0.6rem; color:#76b900; opacity:0.6;">GPU 0 &harr; GPU 1 &nbsp;|&nbsp; GPU 2 &harr; GPU 3</span>
+    <div class="arrow-down">&darr;</div>
+    <div class="flow-label">Bearer sk-*** token validated &rarr; proxied to LiteLLM</div>
+
+    <!-- LiteLLM Layer -->
+    <div class="layer" style="border-color: #388bfd;">
+      <div class="layer-label" style="color: #388bfd;">API Gateway & Routing</div>
+      <div class="row">
+        <div class="box litellm">
+          <div class="name">LiteLLM Proxy</div>
+          <div class="detail">Multi-model routing, API key mgmt<br>User/team quotas, usage tracking<br>OpenAI-compatible unified API</div>
+          <div class="port">:4000</div>
+        </div>
+        <div class="box postgres">
+          <div class="name">PostgreSQL 16</div>
+          <div class="detail">Keys, users, teams<br>usage statistics</div>
+          <div class="port">:5432 (internal)</div>
+        </div>
       </div>
     </div>
+
+    <div class="arrow-down">&darr;</div>
+    <div class="flow-label">Routed to backend model by LiteLLM config</div>
+
+    <!-- GPU Layer -->
+    <div class="layer" style="border-color: #76b900;">
+      <div class="layer-label" style="color: #76b900;">GPU Inference Layer &mdash; 4x NVIDIA H100 NVL (94 GB HBM3 each)</div>
+
+      <div class="gpu-row">
+        <!-- GPU 0 -->
+        <div class="gpu-card">
+          <div class="gpu-label">GPU 0</div>
+          <div class="gpu-hw">H100 NVL &bull; 94 GB</div>
+          <div class="services">
+            <div class="box vllm">
+              <div class="name">vLLM</div>
+              <div class="detail">gpt-oss-120b<br>Tensor Parallel (0+1)<br>80% VRAM, 32K ctx</div>
+              <div class="port">:8000</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GPU 1 -->
+        <div class="gpu-card">
+          <div class="gpu-label">GPU 1</div>
+          <div class="gpu-hw">H100 NVL &bull; 94 GB</div>
+          <div class="services">
+            <div class="box vllm">
+              <div class="name">vLLM</div>
+              <div class="detail">gpt-oss-120b<br>Tensor Parallel (0+1)<br>80% VRAM, 32K ctx</div>
+              <div class="port">:8000 (shared)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GPU 2 -->
+        <div class="gpu-card">
+          <div class="gpu-label">GPU 2</div>
+          <div class="gpu-hw">H100 NVL &bull; 94 GB</div>
+          <div class="services">
+            <div class="box vllm">
+              <div class="name">vLLM</div>
+              <div class="detail">Qwen3.5-27B-FP8<br>85% VRAM, 32K ctx<br>Reasoning + tools</div>
+              <div class="port">:8001</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GPU 3 -->
+        <div class="gpu-card">
+          <div class="gpu-label">GPU 3 (Shared)</div>
+          <div class="gpu-hw">H100 NVL &bull; 94 GB</div>
+          <div class="services">
+            <div class="box vllm">
+              <div class="name">vLLM Embedding</div>
+              <div class="detail">Qwen3-Embedding-4B<br>12% VRAM</div>
+              <div class="port">:8002</div>
+            </div>
+            <div class="box sglang">
+              <div class="name">SGLang Diffusion</div>
+              <div class="detail">Z-Image-Turbo</div>
+              <div class="port">:8003</div>
+            </div>
+            <div class="box sglang">
+              <div class="name">SGLang Image Edit</div>
+              <div class="detail">Qwen-Image-Edit</div>
+              <div class="port">:8004</div>
+            </div>
+            <div class="box audio">
+              <div class="name">Speaches</div>
+              <div class="detail">Whisper + Kokoro TTS</div>
+              <div class="port">:8000</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NVLink -->
+      <div style="display: flex; justify-content: center; margin-top: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px; background: rgba(118,185,0,0.08); border-radius: 6px; padding: 4px 16px;">
+          <span class="nvlink-label">NVLink Bridge</span>
+          <span style="font-size:0.8rem; color:#76b900; opacity:0.6;">GPU 0 &harr; GPU 1 &nbsp;|&nbsp; GPU 2 &harr; GPU 3</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monitoring -->
+    <div class="layer" style="border-color: #6e7681; margin-top: 8px;">
+      <div class="layer-label" style="color: #6e7681;">Monitoring Stack (all bound to 127.0.0.1 &mdash; SSH tunnel access)</div>
+      <div class="row">
+        <div class="box prom">
+          <div class="name">Prometheus</div>
+          <div class="detail">Scrapes all services @15s<br>30-day retention</div>
+          <div class="port">:9090</div>
+        </div>
+        <div class="box grafana">
+          <div class="name">Grafana</div>
+          <div class="detail">Dashboards & visualization<br>Auto-provisioned</div>
+          <div class="port">:3000</div>
+        </div>
+        <div class="box exporter">
+          <div class="name">Node Exporter</div>
+          <div class="detail">CPU, RAM, disk, net</div>
+          <div class="port">:9100</div>
+        </div>
+        <div class="box exporter">
+          <div class="name">DCGM Exporter</div>
+          <div class="detail">GPU util, temp, power</div>
+          <div class="port">:9400</div>
+        </div>
+        <div class="box exporter">
+          <div class="name">F2B Geo Exporter</div>
+          <div class="detail">Ban geo data &rarr; Prometheus</div>
+          <div class="port">:9122</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Deployment -->
+    <div class="layer" style="border-color: #30363d; margin-top: 8px;">
+      <div class="layer-label" style="color: #8b949e;">Deployment & Management</div>
+      <div class="row">
+        <div class="box" style="background: #161b22; border: 2.5px solid #30363d;">
+          <div class="name">Ansible Playbooks</div>
+          <div class="detail">setup &bull; llm-service &bull; monitoring<br>service-control &bull; nuke-from-orbit</div>
+        </div>
+        <div class="box" style="background: #161b22; border: 2.5px solid #30363d;">
+          <div class="name">Docker Compose</div>
+          <div class="detail">2 stacks: llm-service + monitoring<br>Shared monitoring network</div>
+        </div>
+        <div class="box" style="background: #161b22; border: 2.5px solid #30363d;">
+          <div class="name">Let's Encrypt</div>
+          <div class="detail">Certbot TLS certificates<br>Auto-renewal</div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <!-- Monitoring -->
-  <div class="layer" style="border-color: #6e7681; margin-top: 8px;">
-    <div class="layer-label" style="color: #6e7681;">Monitoring Stack (all bound to 127.0.0.1 &mdash; SSH tunnel access)</div>
-    <div class="row">
-      <div class="box prom">
-        <div class="name">Prometheus</div>
-        <div class="detail">Scrapes all services @15s<br>30-day retention</div>
-        <div class="port">:9090</div>
-      </div>
-      <div class="box grafana">
-        <div class="name">Grafana</div>
-        <div class="detail">Dashboards & visualization<br>Auto-provisioned</div>
-        <div class="port">:3000</div>
-      </div>
-      <div class="box exporter">
-        <div class="name">Node Exporter</div>
-        <div class="detail">CPU, RAM, disk, net</div>
-        <div class="port">:9100</div>
-      </div>
-      <div class="box exporter">
-        <div class="name">DCGM Exporter</div>
-        <div class="detail">GPU util, temp, power</div>
-        <div class="port">:9400</div>
-      </div>
-      <div class="box exporter">
-        <div class="name">F2B Geo Exporter</div>
-        <div class="detail">Ban geo data &rarr; Prometheus</div>
-        <div class="port">:9122</div>
-      </div>
-    </div>
-  </div>
+  <!-- Right: Sidebar -->
+  <div class="sidebar">
 
-  <!-- Deployment -->
-  <div class="layer" style="border-color: #30363d; margin-top: 8px;">
-    <div class="layer-label" style="color: #8b949e;">Deployment & Management</div>
-    <div class="row">
-      <div class="box" style="background: #161b22; border: 1.5px solid #30363d;">
-        <div class="name">Ansible Playbooks</div>
-        <div class="detail">setup &bull; llm-service &bull; monitoring<br>service-control &bull; nuke-from-orbit</div>
-      </div>
-      <div class="box" style="background: #161b22; border: 1.5px solid #30363d;">
-        <div class="name">Docker Compose</div>
-        <div class="detail">2 stacks: llm-service + monitoring<br>Shared monitoring network</div>
-      </div>
-      <div class="box" style="background: #161b22; border: 1.5px solid #30363d;">
-        <div class="name">Let's Encrypt</div>
-        <div class="detail">Certbot TLS certificates<br>Auto-renewal</div>
-      </div>
+    <!-- ADRs Panel -->
+    <div class="sidebar-panel" style="border-color: rgba(210, 168, 255, 0.3);">
+      <h3 class="adr-heading">Architecture Decision Records</h3>
+      <ul class="adr-list">
+        <li>
+          <span class="adr-num">000</span>
+          <span class="adr-title">Hardware Selection <span class="adr-tag tag-accepted">accepted</span></span>
+        </li>
+        <li>
+          <span class="adr-num">003</span>
+          <span class="adr-title">vLLM as Inference Engine <span class="adr-tag tag-accepted">accepted</span></span>
+        </li>
+        <li>
+          <span class="adr-num">005</span>
+          <span class="adr-title">Infrastructure Access <span class="adr-tag tag-accepted">accepted</span></span>
+        </li>
+        <li>
+          <span class="adr-num">006</span>
+          <span class="adr-title">Service Access Management <span class="adr-tag tag-proposed">proposed</span></span>
+        </li>
+        <li>
+          <span class="adr-num">008</span>
+          <span class="adr-title">Monitoring Stack <span class="adr-tag tag-accepted">accepted</span></span>
+        </li>
+        <li>
+          <span class="adr-num">009</span>
+          <span class="adr-title">Bare Metal Deployment <span class="adr-tag tag-accepted">accepted</span></span>
+        </li>
+        <li>
+          <span class="adr-num">010</span>
+          <span class="adr-title">Fair Use Policy <span class="adr-tag tag-proposed">proposed</span></span>
+        </li>
+      </ul>
+      <div class="adr-more">+ 4 more (licensing, naming, metrics, backup)</div>
     </div>
+
+    <!-- Documentation Panel -->
+    <div class="sidebar-panel" style="border-color: rgba(88, 166, 255, 0.3);">
+      <h3 class="docs-heading">Documentation</h3>
+      <ul class="doc-list">
+        <li>
+          System Specifications
+          <span class="doc-path">docs/system.md</span>
+        </li>
+        <li>
+          Setup Guide
+          <span class="doc-path">docs/setup.md</span>
+        </li>
+        <li>
+          LLM Service
+          <span class="doc-path">docs/stacks/llm-service/</span>
+        </li>
+        <li>
+          Security Hardening
+          <span class="doc-path">docs/server-security.md</span>
+        </li>
+        <li>
+          Monitoring
+          <span class="doc-path">docs/stacks/monitoring.md</span>
+        </li>
+        <li>
+          Performance Metrics
+          <span class="doc-path">docs/perf-metrics.md</span>
+        </li>
+        <li>
+          Fair Use Policy
+          <span class="doc-path">docs/fair-use-policy.md</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Key Config Panel -->
+    <div class="sidebar-panel" style="border-color: rgba(139, 148, 158, 0.3);">
+      <h3 style="color: #8b949e;">Key Config Files</h3>
+      <ul class="doc-list">
+        <li>
+          Service Definitions
+          <span class="doc-path">stacks/llm-service/docker-compose.yml</span>
+        </li>
+        <li>
+          Model Routing
+          <span class="doc-path">stacks/llm-service/litellm_config.yaml</span>
+        </li>
+        <li>
+          Nginx Security
+          <span class="doc-path">stacks/llm-service/nginx.conf.template</span>
+        </li>
+        <li>
+          Prometheus Targets
+          <span class="doc-path">stacks/monitoring/prometheus.yml</span>
+        </li>
+      </ul>
+    </div>
+
   </div>
 
 </div>
 
-<p style="text-align:center; margin-top: 24px; font-size: 0.65rem; color: #484f58;">
+<p style="text-align:center; margin-top: 36px; font-size: 0.85rem; color: #484f58;">
   Generated from /opt/splinter repository &mdash; Splinter GPU Server Infrastructure Diagram
 </p>
 
