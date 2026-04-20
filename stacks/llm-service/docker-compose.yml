@@ -73,6 +73,50 @@ services:
       retries: 5
       start_period: 500s
 
+  # Gemma 4 31B it
+  vllm-gemma:
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "2"
+    image: vllm/vllm-openai:${VLLM_VERSION}
+    container_name: vllm-gemma
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['2', '3']
+              capabilities: [gpu]
+    
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+    networks:
+      - default
+      - monitoring
+    command: >
+      --model google/gemma-4-31B-it
+      --gpu-memory-utilization 0.90
+      --tensor-parallel-size 2
+      --max-model-len 32768
+      --max-num-seqs 256
+      --enable-auto-tool-choice
+      --async-scheduling
+      --tool-call-parser gemma4
+      --reasoning-parser gemma4
+      --chat-template examples/tool_chat_template_gemma4.jinja
+      --port 8000
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 500s
+
   # Qwen3.5
   vllm-qwen:
     environment:
