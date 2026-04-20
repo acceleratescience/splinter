@@ -159,9 +159,6 @@ services:
     networks:
       - default
       - monitoring
-    depends_on:
-      speaches:
-        condition: service_healthy
     command: >
       --model Qwen/Qwen3-Embedding-4B
       --gpu-memory-utilization 0.12
