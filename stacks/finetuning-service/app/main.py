@@ -31,7 +31,7 @@ app = FastAPI(
     title="Splinter Fine-Tuning Service",
     lifespan=lifespan,
 )
-app.include_router(router, prefix="/v1/fine_tu ning")
+app.include_router(router, prefix="/v1/fine_tuning")
 
 
 @app.get("/health")
