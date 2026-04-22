@@ -1,0 +1,50 @@
+# =============================================================================
+# Docker Compose - Fine-Tuning Service
+# =============================================================================
+#
+# USAGE:
+#   docker compose up -d
+#
+# REQUIRES:
+#   .env file in the same directory (copy from .env.example)
+#
+# =============================================================================
+
+services:
+  finetuning-service:
+    build: .
+    container_name: finetuning-service
+    restart: unless-stopped
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "3" # TODO: Confirm GPU 3
+      FINETUNING_PORT: ${FINETUNING_PORT}
+      LITELLM_URL: "http://host.docker.internal:${LITELLM_PORT}"
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      MAX_JOB_DURATION_HOURS: ${MAX_JOB_DURATION_HOURS}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['3'] # TODO: Confirm GPU 3
+              capabilities: [gpu]
+    volumes:
+      - finetuning_jobs:/data
+    ports:
+      - "127.0.0.1:${FINETUNING_PORT}:${FINETUNING_PORT}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${FINETUNING_PORT}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+volumes:
+  finetuning_jobs:
