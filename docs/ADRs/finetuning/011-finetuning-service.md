@@ -29,11 +29,11 @@ Several constraints shaped this design:
 
 ### Considered approaches for client interface
 
-Because fine-tuning access cannot be universally granted, and because the fine-tuning schema does not map cleanly onto the OpenAI fine-tuning spec (which requires a `file.id` to be submitted, mandating a file upload step we have rejected), we need a purpose-built client interface rather than relying on the OpenAI SDK alone. The design of that interface is covered in ADR-012.
+Because fine-tuning access cannot be universally granted, and because the fine-tuning schema does not map cleanly onto the OpenAI fine-tuning spec (which requires a `file.id` to be submitted, mandating a file upload step we have rejected), we need a purpose-built client interface rather than relying on the OpenAI SDK alone. The design of that interface is covered in [?].
 
 ## Decision
 
-We implement a fine-tuning service as a custom Docker container added to the `llm-service` stack. Users interact with it via a Splinter SDK (see ADR-012), which handles authentication against LiteLLM API keys and a separate fine-tuning access whitelist.
+We implement a fine-tuning service as a custom Docker container added to the `llm-service` stack. Users interact with it via a Splinter SDK, which handles authentication against LiteLLM API keys and a separate fine-tuning access whitelist.
 
 The service exposes:
 
