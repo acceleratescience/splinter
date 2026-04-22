@@ -3,6 +3,7 @@ name = "splinter"
 version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.12"
+
 dependencies = [
     "ipykernel>=7.2.0",
     "matplotlib>=3.10.8",
@@ -12,5 +13,21 @@ dependencies = [
     "numpy>=1.26",
     "openai>=2.21.0",
     "rich>=14.3.2",
-    "vllm>=0.15.1",
+    "vllm>=0.15.1; sys_platform == 'linux'",
 ]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.6.0",
+    "ruff>=0.15.11",
+]
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "D", "ANN"]
+ignore = ["ANN401"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
