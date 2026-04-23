@@ -1,4 +1,4 @@
-FROM ${AXOLOTL_IMAGE}
+FROM axolotlai/axolotl-uv:main-py3.12-cu130-2.10.0
 
 WORKDIR /app
 
