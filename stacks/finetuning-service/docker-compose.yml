@@ -29,6 +29,7 @@ services:
               device_ids: ['3'] # TODO: Confirm GPU 3
               capabilities: [gpu]
     volumes:
+      - ./config.yaml:/app/config.yaml:ro
       - finetuning_jobs:/data
     ports:
       - "127.0.0.1:${FINETUNING_PORT}:${FINETUNING_PORT}"

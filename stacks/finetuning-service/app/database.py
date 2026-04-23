@@ -105,7 +105,18 @@ def create_job(request: JobSubmitRequest) -> JobResponse:
     now = datetime.now(timezone.utc).isoformat()
     config = json.dumps(
         {
-            # TODO: Add hyperparameters/config keys
+            "num_epochs": request.num_epochs,
+            "learning_rate": request.learning_rate,
+            "micro_batch_size": request.micro_batch_size,
+            "gradient_accumulation_steps": (
+                request.gradient_accumulation_steps
+            ),
+            "sequence_len": request.sequence_len,
+            "lora_r": request.lora_r,
+            "lora_dropout": request.lora_dropout,
+            "lora_target_modules": request.lora_target_modules,
+            "load_in_4bit": request.load_in_4bit,
+            "load_in_8bit": request.load_in_8bit,
         }
     )
     with get_connection() as conn:

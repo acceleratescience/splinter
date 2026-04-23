@@ -1,0 +1,10 @@
+# =============================================================================
+# Fine-Tuning Service Configuration
+# =============================================================================
+#
+# Edit this file to update service settings without rebuilding the image.
+#
+# =============================================================================
+
+allowed_models:
+  - meta-llama/Llama-3.1-8B-Instruct
