@@ -1,10 +1,10 @@
-FROM axolotlai/axolotl-uv:main-py3.12-cu130-2.10.0
+FROM axolotlai/axolotl:main-py3.12-cu130-2.10.0
 
 WORKDIR /app
 
 # Install service dependencies on top of Axolotl's environment
 COPY requirements.txt .
-RUN UV_SYSTEM_PYTHON=1 uv pip install --system -r requirements.txt
+RUN pip install -r requirements.txt
 
 COPY app/ ./app/
 

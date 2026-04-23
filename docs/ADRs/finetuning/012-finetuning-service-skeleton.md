@@ -11,7 +11,7 @@ With the high level service design established in ADR-011, the skeleton implemen
 
 **Separate stack.** The fine-tuning service lives in `stacks/finetuning-service/` rather than extending the llm-service stack. This mirrors the monitoring stack pattern and allows the service to be brought up and down independently.
 
-**Base image.** `axolotlai/axolotl-uv:main-py3.12-cu130-2.10.0` is used and pinned. The `-uv` variant is consistent with the team's preference for uv across the project. The image is pinned to a specific tag; updates are a deliberate decision, identical to our LiteLLM versioning. 
+**Base image.** `axolotlai/axolotl:main-py3.12-cu130-2.10.0` is used and pinned. The image is pinned to a specific tag; updates are a deliberate decision, identical to our LiteLLM versioning. The `-uv` variant was considered for consistency with the team's preference for uv, but it locks down its Python installation and prevents packages being installed on top of it — which is exactly what we need to do to add FastAPI and uvicorn. The standard image with `pip` is used instead.
 
 **FastAPI** for the service framework, with **SQLite** backed by a named Docker volume for job queue state. This is sufficient for a single-worker serialised queue and avoids a dependency on the existing PostgreSQL instance.
 
