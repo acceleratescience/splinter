@@ -15,6 +15,8 @@ from app.database import (
     claim_job,
     complete_job,
     get_next_queued_job,
+    init_db,
+    recover_running_jobs,
 )
 from app.models import JobStatus
 
@@ -73,6 +75,7 @@ def build_axolotl_config(
         "test_datasets": [
             {
                 "path": hf_dataset,
+                "type": "chat_template",
                 "split": "validation",
             }
         ],
@@ -157,6 +160,8 @@ def main() -> None:
     Polls the job queue at a fixed interval and processes
     one job at a time.
     """
+    init_db()
+    recover_running_jobs()
     log.info(
         "Worker started. Polling every %ds, max job duration %dh.",
         POLL_INTERVAL,
