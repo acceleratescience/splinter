@@ -33,9 +33,11 @@ class JobSubmitRequest(BaseModel):
             "and write access to the adapter destination."
         )
     )
-    suffix: Optional[str] = Field(
-        default=None,
-        description="Label appended to the adapter repository name.",
+    hub_model_id: str = Field(
+        description=(
+            "Hugging Face repo path to push the trained adapter to "
+            "(e.g. 'username/my-adapter')."
+        )
     )
     num_epochs: int = Field(ge=1)
     learning_rate: float = Field(gt=0)
@@ -115,7 +117,7 @@ class JobResponse(BaseModel):
     status: JobStatus
     model: str
     hf_dataset: str
-    suffix: Optional[str] = None
+    hub_model_id: str
     created_at: datetime
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None

@@ -2,9 +2,34 @@
 # Fine-Tuning Service Configuration
 # =============================================================================
 #
-# Edit this file to update service settings without rebuilding the image.
+# Edit this file and restart the service to update settings
+# without rebuilding the image.
 #
 # =============================================================================
 
 allowed_models:
   - meta-llama/Llama-3.1-8B-Instruct
+
+axolotl_base_config:
+  # Adapter
+  adapter: lora
+
+  # Precision
+  bf16: true
+  tf32: true
+
+  # Memory optimisation
+  flash_attention: true
+  gradient_checkpointing: true
+
+  # Evaluation and checkpointing
+  eval_strategy: epoch
+  save_strategy: epoch
+  save_total_limit: 2
+  save_safetensors: true
+
+  # Hub push
+  hub_strategy: end
+
+  # Security
+  trust_remote_code: false

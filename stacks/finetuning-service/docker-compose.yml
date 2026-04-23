@@ -11,23 +11,19 @@
 # =============================================================================
 
 services:
-  finetuning-service:
-    build: .
-    container_name: finetuning-service
+  # ---------------------------------------------------------------------------
+  # API
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: finetuning-api
     restart: unless-stopped
     environment:
-      NVIDIA_VISIBLE_DEVICES: "3" # TODO: Confirm GPU 3
       FINETUNING_PORT: ${FINETUNING_PORT}
       LITELLM_URL: "http://host.docker.internal:${LITELLM_PORT}"
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
-      MAX_JOB_DURATION_HOURS: ${MAX_JOB_DURATION_HOURS}
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: ['3'] # TODO: Confirm GPU 3
-              capabilities: [gpu]
     volumes:
       - ./config.yaml:/app/config.yaml:ro
       - finetuning_jobs:/data
@@ -41,6 +37,34 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  # Worker
+  # ---------------------------------------------------------------------------
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: finetuning-worker
+    restart: unless-stopped
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "3"
+      MAX_JOB_DURATION_HOURS: ${MAX_JOB_DURATION_HOURS}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['3']
+              capabilities: [gpu]
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - finetuning_jobs:/data
     logging:
       driver: json-file
       options:
