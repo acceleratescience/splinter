@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install service dependencies on top of Axolotl's environment
 COPY requirements.txt .
-RUN uv pip install --system -r requirements.txt
+RUN UV_SYSTEM_PYTHON=1 uv pip install --system -r requirements.txt
 
 COPY app/ ./app/
 
