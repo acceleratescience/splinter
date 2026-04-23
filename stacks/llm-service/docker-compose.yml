@@ -76,7 +76,7 @@ services:
   # Gemma 4 31B it
   vllm-gemma:
     environment:
-      NVIDIA_VISIBLE_DEVICES: "2"
+      NVIDIA_VISIBLE_DEVICES: "2,3"
     image: vllm/vllm-openai:${VLLM_VERSION}
     container_name: vllm-gemma
     restart: unless-stopped
@@ -103,7 +103,6 @@ services:
       --async-scheduling
       --tool-call-parser gemma4
       --reasoning-parser gemma4
-      --chat-template examples/tool_chat_template_gemma4.jinja
       --port 8000
     logging:
       driver: json-file
@@ -311,18 +310,18 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      vllm-openai:
-        condition: service_started
-      vllm-qwen:
-        condition: service_started
-      vllm-embedding:
-        condition: service_started
-      speaches:
-        condition: service_started
-      sglang-diffusion:
-        condition: service_started
-      sglang-image-edit:
-        condition: service_started
+      # vllm-openai:
+      #   condition: service_started
+      # vllm-qwen:
+      #   condition: service_started
+      # vllm-embedding:
+      #   condition: service_started
+      # speaches:
+      #   condition: service_started
+      # sglang-diffusion:
+      #   condition: service_started
+      # sglang-image-edit:
+      #   condition: service_started
     environment:
       STORE_MODEL_IN_DB: "True"
       DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"

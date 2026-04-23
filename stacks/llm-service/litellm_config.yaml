@@ -16,6 +16,12 @@ model_list:
       api_base: http://vllm-openai:8000/v1
       api_key: "none"
       stream: true
+  - model_name: google/gemma-4-31B-it
+    litellm_params:
+      model: hosted_vllm/google/gemma-4-31B-it
+      api_base: http://vllm-gemma:8000/v1
+      api_key: "none"
+      stream: true
   - model_name: Qwen/Qwen3.5-27B-FP8
     litellm_params:
       model: hosted_vllm/Qwen/Qwen3.5-27B-FP8
