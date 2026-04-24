@@ -43,7 +43,7 @@ class JobSubmitRequest(BaseModel):
     learning_rate: float = Field(gt=0)
     micro_batch_size: int = Field(default=4, ge=1)
     gradient_accumulation_steps: int = Field(default=1, ge=1)
-    sequence_len: int = Field(default=512, ge=64)
+    sequence_len: int = Field(default=2048, ge=64)
     lora_r: int = Field(ge=1)
     lora_dropout: float = Field(default=0.0, ge=0.0, le=1.0)
     lora_target_modules: list[str] = Field(

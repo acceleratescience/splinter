@@ -21,6 +21,8 @@ axolotl_base_config:
   # Memory optimisation
   flash_attention: true
   gradient_checkpointing: true
+  sample_packing: true
+  eval_sample_packing: false
 
   # Evaluation and checkpointing
   eval_strategy: epoch
