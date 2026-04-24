@@ -53,14 +53,14 @@ services:
     container_name: finetuning-worker
     restart: unless-stopped
     environment:
-      NVIDIA_VISIBLE_DEVICES: "3"
+      NVIDIA_VISIBLE_DEVICES: "${DEVICE}"
       MAX_JOB_DURATION_HOURS: ${MAX_JOB_DURATION_HOURS}
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ['3']
+              device_ids: ["${DEVICE}"]
               capabilities: [gpu]
     volumes:
       - ./config.yaml:/app/config.yaml:ro
