@@ -4,7 +4,10 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator, model_validator
+from typing_extensions import Self
+
+from .config import get_allowed_models
 
 
 class JobStatus(str, Enum):
@@ -30,12 +33,107 @@ class JobSubmitRequest(BaseModel):
             "and write access to the adapter destination."
         )
     )
-    suffix: Optional[str] = Field(
-        default=None,
-        description="Label appended to the adapter repository name.",
+    hub_model_id: str = Field(
+        description=(
+            "Hugging Face repo path to push the trained adapter to "
+            "(e.g. 'username/my-adapter')."
+        )
     )
-    # TODO: add hyperparameters/config keys
-    #   (minimal subset of keys from axolotl config reference)
+    num_epochs: int = Field(ge=1)
+    learning_rate: float = Field(gt=0)
+    micro_batch_size: int = Field(default=4, ge=1)
+    gradient_accumulation_steps: int = Field(default=1, ge=1)
+    sequence_len: int = Field(default=2048, ge=64)
+    lora_r: int = Field(ge=1)
+    lora_dropout: float = Field(default=0.0, ge=0.0, le=1.0)
+    lora_target_modules: list[str] = Field(
+        default=["q_proj", "v_proj", "k_proj", "o_proj"]
+    )
+    load_in_4bit: bool = Field(default=False)
+    load_in_8bit: bool = Field(default=False)
+    do_eval: bool = Field(default=False)
+    wandb_token: Optional[str] = Field(default=None)
+    wandb_project: Optional[str] = Field(default=None)
+    wandb_entity: Optional[str] = Field(default=None)
+
+    @field_validator("model")
+    @classmethod
+    def model_must_be_whitelisted(cls, v: str) -> str:
+        """Validate the model is on the allowed list.
+
+        Args:
+            v: The model repo path to validate.
+
+        Returns:
+            The validated model path.
+
+        Raises:
+            ValueError: If the model is not on the whitelist.
+        """
+        allowed = get_allowed_models()
+        if v not in allowed:
+            raise ValueError(
+                f"Model '{v}' is not permitted. Allowed models: {allowed}"
+            )
+        return v
+
+    @field_validator("lora_target_modules")
+    @classmethod
+    def lora_target_modules_must_not_be_empty(cls, v: list[str]) -> list[str]:
+        """Validate that at least one LoRA target module is specified.
+
+        Args:
+            v: The list of target modules.
+
+        Returns:
+            The validated list.
+
+        Raises:
+            ValueError: If the list is empty.
+        """
+        if not v:
+            raise ValueError(
+                "lora_target_modules must contain at least one module."
+            )
+        return v
+
+    @model_validator(mode="after")
+    def wandb_fields_are_consistent(self) -> Self:
+        """Validate wandb field combinations are coherent.
+
+        Returns:
+            The validated model instance.
+
+        Raises:
+            ValueError: If wandb fields are provided in an invalid
+                combination.
+        """
+        has_token = bool(self.wandb_token)
+        has_project = bool(self.wandb_project)
+        has_entity = bool(self.wandb_entity)
+        if has_entity and not has_project:
+            raise ValueError("wandb_entity requires wandb_project to be set.")
+        if has_project and not has_token:
+            raise ValueError("wandb_project requires wandb_token.")
+        if has_token and not has_project:
+            raise ValueError("wandb_token requires wandb_project.")
+        return self
+
+    @model_validator(mode="after")
+    def quantisation_modes_are_mutually_exclusive(self) -> Self:
+        """Validate that 4-bit and 8-bit quantisation are not both set.
+
+        Returns:
+            The validated model instance.
+
+        Raises:
+            ValueError: If both load_in_4bit and load_in_8bit are True.
+        """
+        if self.load_in_4bit and self.load_in_8bit:
+            raise ValueError(
+                "load_in_4bit and load_in_8bit are mutually exclusive."
+            )
+        return self
 
 
 class JobResponse(BaseModel):
@@ -45,7 +143,7 @@ class JobResponse(BaseModel):
     status: JobStatus
     model: str
     hf_dataset: str
-    suffix: Optional[str] = None
+    hub_model_id: str
     created_at: datetime
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None

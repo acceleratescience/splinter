@@ -1,0 +1,22 @@
+# =============================================================================
+# Dockerfile.worker - Fine-Tuning Worker
+# =============================================================================
+#
+# Axolotl-based image for the queue worker that runs training jobs.
+# The FastAPI service uses a separate lightweight image (Dockerfile.api).
+#
+# Update the tag deliberately when upgrading Axolotl.
+#
+# =============================================================================
+
+FROM axolotlai/axolotl:main-py3.12-cu130-2.10.0
+
+WORKDIR /app
+
+COPY requirements.worker.txt .
+RUN pip install -r requirements.worker.txt
+
+COPY app/ ./app/
+COPY worker.py .
+
+CMD ["python", "worker.py"]

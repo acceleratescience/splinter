@@ -4,6 +4,7 @@ import json
 import sqlite3
 import uuid
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Generator, Optional
@@ -11,6 +12,24 @@ from typing import Generator, Optional
 from .models import JobResponse, JobStatus, JobSubmitRequest
 
 DB_PATH = Path("/data/jobs.db")
+
+
+@dataclass
+class JobDetail:
+    """Internal job representation including sensitive fields.
+
+    Not exposed via the API. Used by the worker to access the
+    HF token and full training config.
+    """
+
+    id: str
+    model: str
+    hf_dataset: str
+    hf_token: str
+    hub_model_id: str
+    wandb_token: Optional[str]
+    config: str
+    status: JobStatus
 
 
 @contextmanager
@@ -43,7 +62,7 @@ def _row_to_job(row: sqlite3.Row) -> JobResponse:
         status=JobStatus(row["status"]),
         model=row["model"],
         hf_dataset=row["hf_dataset"],
-        suffix=row["suffix"],
+        hub_model_id=row["hub_model_id"],
         created_at=datetime.fromisoformat(row["created_at"]),
         started_at=(
             datetime.fromisoformat(row["started_at"])
@@ -68,7 +87,9 @@ def init_db() -> None:
                 status        TEXT NOT NULL,
                 model         TEXT NOT NULL,
                 hf_dataset    TEXT NOT NULL,
-                suffix        TEXT,
+                hf_token      TEXT,
+                hub_model_id  TEXT NOT NULL,
+                wandb_token   TEXT,
                 config        TEXT NOT NULL,
                 created_at    TEXT NOT NULL,
                 started_at    TEXT,
@@ -105,23 +126,39 @@ def create_job(request: JobSubmitRequest) -> JobResponse:
     now = datetime.now(timezone.utc).isoformat()
     config = json.dumps(
         {
-            # TODO: Add hyperparameters/config keys
+            "num_epochs": request.num_epochs,
+            "learning_rate": request.learning_rate,
+            "micro_batch_size": request.micro_batch_size,
+            "gradient_accumulation_steps": (
+                request.gradient_accumulation_steps
+            ),
+            "sequence_len": request.sequence_len,
+            "lora_r": request.lora_r,
+            "lora_dropout": request.lora_dropout,
+            "lora_target_modules": request.lora_target_modules,
+            "load_in_4bit": request.load_in_4bit,
+            "load_in_8bit": request.load_in_8bit,
+            "do_eval": request.do_eval,
+            "wandb_project": request.wandb_project,
+            "wandb_entity": request.wandb_entity,
         }
     )
     with get_connection() as conn:
         conn.execute(
             """
             INSERT INTO jobs (
-                id, status, model, hf_dataset,
-                suffix, config, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                id, status, model, hf_dataset, hf_token,
+                hub_model_id, wandb_token, config, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 job_id,
                 JobStatus.QUEUED,
                 request.model,
                 request.hf_dataset,
-                request.suffix,
+                request.hf_token,
+                request.hub_model_id,
+                request.wandb_token,
                 config,
                 now,
             ),
@@ -131,7 +168,7 @@ def create_job(request: JobSubmitRequest) -> JobResponse:
         status=JobStatus.QUEUED,
         model=request.model,
         hf_dataset=request.hf_dataset,
-        suffix=request.suffix,
+        hub_model_id=request.hub_model_id,
         created_at=datetime.fromisoformat(now),
     )
 
@@ -186,3 +223,83 @@ def cancel_job(job_id: str) -> Optional[JobResponse]:
             (JobStatus.CANCELLED, job_id, JobStatus.QUEUED),
         )
     return get_job(job_id)
+
+
+def get_next_queued_job() -> Optional[JobDetail]:
+    """Fetch the oldest queued job for the worker to process.
+
+    Returns:
+        A JobDetail if a queued job exists, otherwise None.
+    """
+    with get_connection() as conn:
+        row = conn.execute(
+            """
+            SELECT * FROM jobs
+            WHERE status = ?
+            ORDER BY created_at ASC
+            LIMIT 1
+            """,
+            (JobStatus.QUEUED,),
+        ).fetchone()
+    if not row:
+        return None
+    return JobDetail(
+        id=row["id"],
+        model=row["model"],
+        hf_dataset=row["hf_dataset"],
+        hf_token=row["hf_token"],
+        hub_model_id=row["hub_model_id"],
+        wandb_token=row["wandb_token"],
+        config=row["config"],
+        status=JobStatus(row["status"]),
+    )
+
+
+def claim_job(job_id: str) -> bool:
+    """Atomically mark a queued job as running.
+
+    Args:
+        job_id: The UUID of the job to claim.
+
+    Returns:
+        True if the job was successfully claimed, False if it
+        was already claimed by another process.
+    """
+    now = datetime.now(timezone.utc).isoformat()
+    with get_connection() as conn:
+        result = conn.execute(
+            """
+            UPDATE jobs SET status = ?, started_at = ?
+            WHERE id = ? AND status = ?
+            """,
+            (JobStatus.RUNNING, now, job_id, JobStatus.QUEUED),
+        )
+        return result.rowcount > 0
+
+
+def complete_job(
+    job_id: str,
+    status: JobStatus,
+    error_message: Optional[str] = None,
+) -> None:
+    """Mark a job as completed and clear its tokens.
+
+    Args:
+        job_id: The UUID of the job to complete.
+        status: The final status (succeeded or failed).
+        error_message: Optional error description for failed jobs.
+    """
+    now = datetime.now(timezone.utc).isoformat()
+    with get_connection() as conn:
+        conn.execute(
+            """
+            UPDATE jobs
+            SET status = ?,
+                completed_at = ?,
+                error_message = ?,
+                hf_token = NULL,
+                wandb_token = NULL
+            WHERE id = ?
+            """,
+            (status, now, error_message, job_id),
+        )

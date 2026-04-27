@@ -1,0 +1,2 @@
+pyyaml
+flash-attn-4[cu13]==4.0.0b10
