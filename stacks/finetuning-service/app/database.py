@@ -27,6 +27,7 @@ class JobDetail:
     hf_dataset: str
     hf_token: str
     hub_model_id: str
+    wandb_token: Optional[str]
     config: str
     status: JobStatus
 
@@ -88,6 +89,7 @@ def init_db() -> None:
                 hf_dataset    TEXT NOT NULL,
                 hf_token      TEXT,
                 hub_model_id  TEXT NOT NULL,
+                wandb_token   TEXT,
                 config        TEXT NOT NULL,
                 created_at    TEXT NOT NULL,
                 started_at    TEXT,
@@ -136,6 +138,9 @@ def create_job(request: JobSubmitRequest) -> JobResponse:
             "lora_target_modules": request.lora_target_modules,
             "load_in_4bit": request.load_in_4bit,
             "load_in_8bit": request.load_in_8bit,
+            "do_eval": request.do_eval,
+            "wandb_project": request.wandb_project,
+            "wandb_entity": request.wandb_entity,
         }
     )
     with get_connection() as conn:
@@ -143,8 +148,8 @@ def create_job(request: JobSubmitRequest) -> JobResponse:
             """
             INSERT INTO jobs (
                 id, status, model, hf_dataset, hf_token,
-                hub_model_id, config, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                hub_model_id, wandb_token, config, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 job_id,
@@ -153,6 +158,7 @@ def create_job(request: JobSubmitRequest) -> JobResponse:
                 request.hf_dataset,
                 request.hf_token,
                 request.hub_model_id,
+                request.wandb_token,
                 config,
                 now,
             ),
@@ -243,6 +249,7 @@ def get_next_queued_job() -> Optional[JobDetail]:
         hf_dataset=row["hf_dataset"],
         hf_token=row["hf_token"],
         hub_model_id=row["hub_model_id"],
+        wandb_token=row["wandb_token"],
         config=row["config"],
         status=JobStatus(row["status"]),
     )
@@ -275,7 +282,7 @@ def complete_job(
     status: JobStatus,
     error_message: Optional[str] = None,
 ) -> None:
-    """Mark a job as completed and clear its HF token.
+    """Mark a job as completed and clear its tokens.
 
     Args:
         job_id: The UUID of the job to complete.
@@ -290,7 +297,8 @@ def complete_job(
             SET status = ?,
                 completed_at = ?,
                 error_message = ?,
-                hf_token = NULL
+                hf_token = NULL,
+                wandb_token = NULL
             WHERE id = ?
             """,
             (status, now, error_message, job_id),

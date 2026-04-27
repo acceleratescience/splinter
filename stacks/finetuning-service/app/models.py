@@ -52,6 +52,9 @@ class JobSubmitRequest(BaseModel):
     load_in_4bit: bool = Field(default=False)
     load_in_8bit: bool = Field(default=False)
     do_eval: bool = Field(default=False)
+    wandb_token: Optional[str] = Field(default=None)
+    wandb_project: Optional[str] = Field(default=None)
+    wandb_entity: Optional[str] = Field(default=None)
 
     @field_validator("model")
     @classmethod
@@ -93,6 +96,28 @@ class JobSubmitRequest(BaseModel):
                 "lora_target_modules must contain at least one module."
             )
         return v
+
+    @model_validator(mode="after")
+    def wandb_fields_are_consistent(self) -> Self:
+        """Validate wandb field combinations are coherent.
+
+        Returns:
+            The validated model instance.
+
+        Raises:
+            ValueError: If wandb fields are provided in an invalid
+                combination.
+        """
+        has_token = bool(self.wandb_token)
+        has_project = bool(self.wandb_project)
+        has_entity = bool(self.wandb_entity)
+        if has_entity and not has_project:
+            raise ValueError("wandb_entity requires wandb_project to be set.")
+        if has_project and not has_token:
+            raise ValueError("wandb_project requires wandb_token.")
+        if has_token and not has_project:
+            raise ValueError("wandb_token requires wandb_project.")
+        return self
 
     @model_validator(mode="after")
     def quantisation_modes_are_mutually_exclusive(self) -> Self:

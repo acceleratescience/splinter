@@ -85,6 +85,19 @@ def build_axolotl_config(
             if user_config.get("do_eval")
             else {"eval_strategy": "no"}
         ),
+        **(
+            {
+                "use_wandb": True,
+                "wandb_project": user_config["wandb_project"],
+                **(
+                    {"wandb_entity": user_config["wandb_entity"]}
+                    if user_config.get("wandb_entity")
+                    else {}
+                ),
+            }
+            if user_config.get("wandb_project")
+            else {}
+        ),
         "num_epochs": user_config["num_epochs"],
         "learning_rate": user_config["learning_rate"],
         "micro_batch_size": user_config["micro_batch_size"],
@@ -114,6 +127,7 @@ def run_job(
     hf_dataset: str,
     hf_token: str,
     hub_model_id: str,
+    wandb_token: Optional[str],
     user_config: dict,
 ) -> None:
     """Execute a fine-tuning job.
@@ -127,6 +141,7 @@ def run_job(
         hf_dataset: The HuggingFace dataset repo path.
         hf_token: The HuggingFace token for dataset and Hub access.
         hub_model_id: The destination HuggingFace repo for the adapter.
+        wandb_token: Optional Weights & Biases API key.
         user_config: The user-provided training configuration.
     """
     job_dir = WORK_DIR / job_id
@@ -138,6 +153,8 @@ def run_job(
             job_id, model, hf_dataset, hub_model_id, user_config
         )
         env = {**os.environ, "HF_TOKEN": hf_token}
+        if wandb_token:
+            env["WANDB_API_KEY"] = wandb_token
         subprocess.run(
             ["axolotl", "train", str(config_path)],
             env=env,
@@ -186,6 +203,7 @@ def main() -> None:
                     job.hf_dataset,
                     job.hf_token,
                     job.hub_model_id,
+                    job.wandb_token,
                     user_config,
                 )
         else:
