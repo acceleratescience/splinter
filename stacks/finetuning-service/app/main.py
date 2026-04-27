@@ -3,8 +3,9 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 
+from .auth import verify_litellm_key
 from .database import init_db, recover_running_jobs
 from .routes import router
 
@@ -31,7 +32,11 @@ app = FastAPI(
     title="Splinter Fine-Tuning Service",
     lifespan=lifespan,
 )
-app.include_router(router, prefix="/v1/fine_tuning")
+app.include_router(
+    router,
+    prefix="/v1/fine_tuning",
+    dependencies=[Depends(verify_litellm_key)],
+)
 
 
 @app.get("/health")
