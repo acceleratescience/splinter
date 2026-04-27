@@ -51,6 +51,7 @@ class JobSubmitRequest(BaseModel):
     )
     load_in_4bit: bool = Field(default=False)
     load_in_8bit: bool = Field(default=False)
+    do_eval: bool = Field(default=False)
 
     @field_validator("model")
     @classmethod

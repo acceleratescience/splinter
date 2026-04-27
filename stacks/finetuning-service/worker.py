@@ -72,13 +72,19 @@ def build_axolotl_config(
                 "split": "train",
             }
         ],
-        "test_datasets": [
+        **(
             {
-                "path": hf_dataset,
-                "type": "chat_template",
-                "split": "validation",
+                "test_datasets": [
+                    {
+                        "path": hf_dataset,
+                        "type": "chat_template",
+                        "split": "validation",
+                    }
+                ]
             }
-        ],
+            if user_config.get("do_eval")
+            else {"eval_strategy": "no"}
+        ),
         "num_epochs": user_config["num_epochs"],
         "learning_rate": user_config["learning_rate"],
         "micro_batch_size": user_config["micro_batch_size"],
