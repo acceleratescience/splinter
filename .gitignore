@@ -15,3 +15,5 @@ postgres_data/
 Thumbs.db
 
 .idea/
+
+whitelist.txt

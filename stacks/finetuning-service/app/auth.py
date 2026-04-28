@@ -3,7 +3,6 @@
 import os
 
 import httpx
-import yaml
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
@@ -14,9 +13,16 @@ LITELLM_MASTER_KEY = os.environ["LITELLM_MASTER_KEY"]
 
 
 def _load_allowed_users() -> list[str]:
-    with open("/app/config.yaml") as f:
-        config = yaml.safe_load(f)
-    return config.get("allowed_users", [])
+    """Load allowed user IDs from whitelist.txt, one ID per line.
+
+    Returns an empty list if the file does not exist, which permits
+    any valid LiteLLM key.
+    """
+    try:
+        with open("/app/whitelist.txt") as f:
+            return [line.strip() for line in f if line.strip()]
+    except FileNotFoundError:
+        return []
 
 
 async def verify_litellm_key(

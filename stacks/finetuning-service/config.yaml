@@ -7,10 +7,6 @@
 #
 # =============================================================================
 
-# If non-empty, only these LiteLLM user IDs may access the service.
-# Leave empty ([]) to allow any valid LiteLLM key.
-allowed_users: ["ft-test-allowed"]
-
 allowed_models:
   - meta-llama/Llama-3.1-8B-Instruct
 
