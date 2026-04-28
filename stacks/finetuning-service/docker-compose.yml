@@ -22,15 +22,16 @@ services:
     restart: unless-stopped
     environment:
       FINETUNING_PORT: ${FINETUNING_PORT}
-      LITELLM_URL: "http://host.docker.internal:${LITELLM_PORT}"
+      LITELLM_URL: "http://litellm-proxy:${LITELLM_PORT}"
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
     volumes:
       - ./config.yaml:/app/config.yaml:ro
       - finetuning_jobs:/data
     ports:
       - "127.0.0.1:${FINETUNING_PORT}:${FINETUNING_PORT}"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    networks:
+      - default
+      - finetuning
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:${FINETUNING_PORT}/health"]
       interval: 30s
@@ -73,3 +74,9 @@ services:
 
 volumes:
   finetuning_jobs:
+
+networks:
+  default:
+  finetuning:
+    external: true
+    name: finetuning_default
