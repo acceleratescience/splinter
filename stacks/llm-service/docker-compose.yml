@@ -299,6 +299,7 @@ services:
     networks:
       - default
       - monitoring
+      - finetuning
 
 volumes:
   postgres_data:
@@ -310,3 +311,6 @@ networks:
   monitoring:
     external: true
     name: monitoring_default
+  finetuning:
+    external: true
+    name: finetuning_default

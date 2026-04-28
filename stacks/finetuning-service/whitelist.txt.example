@@ -1,0 +1,6 @@
+# Allowed LiteLLM user IDs (one per line).
+# Copy this file to whitelist.txt and add real user IDs.
+# If whitelist.txt is absent, any valid LiteLLM key is accepted.
+
+user_abc123
+user_xyz456
