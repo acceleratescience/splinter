@@ -22,7 +22,7 @@ services:
     restart: unless-stopped
     environment:
       FINETUNING_PORT: ${FINETUNING_PORT}
-      LITELLM_URL: "http://litellm-proxy:${LITELLM_PORT}}"
+      LITELLM_URL: "http://litellm-proxy:${LITELLM_PORT}"
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
     volumes:
       - ./config.yaml:/app/config.yaml:ro
