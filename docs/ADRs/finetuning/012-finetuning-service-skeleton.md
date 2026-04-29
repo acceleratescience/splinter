@@ -1,4 +1,4 @@
-# ADR-013. Fine-Tuning Service Skeleton
+# ADR-012. Fine-Tuning Service Skeleton
 
 Date: 2026-04-22
 Status: Proposed
