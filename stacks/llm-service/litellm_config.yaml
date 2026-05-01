@@ -28,6 +28,12 @@ model_list:
       api_base: http://vllm-qwen:8001/v1
       api_key: "none"
       stream: true
+  - model_name: Qwen/Qwen3.6-27B-FP8
+    litellm_params:
+      model: hosted_vllm/Qwen/Qwen3.6-27B-FP8
+      api_base: http://vllm-qwen36:8000/v1
+      api_key: "none"
+      stream: true
   - model_name: whisper-1
     litellm_params:
       model: hosted_vllm/Systran/faster-whisper-large-v3
