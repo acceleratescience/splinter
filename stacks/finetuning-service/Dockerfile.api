@@ -1,0 +1,19 @@
+# =============================================================================
+# Dockerfile.api - Fine-Tuning Service API
+# =============================================================================
+#
+# Lightweight image for the FastAPI service only.
+# The Axolotl worker uses a separate image (Dockerfile.worker).
+#
+# =============================================================================
+
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY requirements.api.txt .
+RUN pip install -r requirements.api.txt
+
+COPY app/ ./app/
+
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${FINETUNING_PORT}"]

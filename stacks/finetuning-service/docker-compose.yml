@@ -1,0 +1,83 @@
+# =============================================================================
+# Docker Compose - Fine-Tuning Service
+# =============================================================================
+#
+# USAGE:
+#   docker compose up -d
+#
+# REQUIRES:
+#   .env file in the same directory (copy from .env.example)
+#
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # API
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: finetuning-api
+    restart: unless-stopped
+    environment:
+      FINETUNING_PORT: ${FINETUNING_PORT}
+      LITELLM_URL: "http://litellm-proxy:${LITELLM_PORT}"
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ./whitelist.txt:/app/whitelist.txt:ro
+      - finetuning_jobs:/data
+    ports:
+      - "127.0.0.1:${FINETUNING_PORT}:${FINETUNING_PORT}"
+    networks:
+      - default
+      - finetuning
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:${FINETUNING_PORT}/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  # Worker
+  # ---------------------------------------------------------------------------
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: finetuning-worker
+    restart: unless-stopped
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "${DEVICE}"
+      MAX_JOB_DURATION_HOURS: ${MAX_JOB_DURATION_HOURS}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["${DEVICE}"]
+              capabilities: [gpu]
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - finetuning_jobs:/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+
+volumes:
+  finetuning_jobs:
+
+networks:
+  default:
+  finetuning:
+    external: true
+    name: finetuning_default
