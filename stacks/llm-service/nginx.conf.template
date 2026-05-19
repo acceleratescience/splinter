@@ -24,7 +24,7 @@ limit_conn_zone $binary_remote_addr zone=conn_limit:10m;
 # Validate Authorization header format (Bearer + LiteLLM key prefix)
 map $http_authorization $auth_valid {
     default 0;
-    "~^Bearer\s+sk-.{10,}$" 1;
+    "~*^Bearer\s+sk-.{10,}$" 1;
 }
 
 # Require Bearer auth on API and health endpoints only

@@ -73,6 +73,89 @@ services:
       retries: 5
       start_period: 500s
 
+  # Gemma 4 31B it
+  vllm-gemma:
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "2,3"
+    image: vllm/vllm-openai:${VLLM_VERSION}
+    container_name: vllm-gemma
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['2', '3']
+              capabilities: [gpu]
+    
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+    networks:
+      - default
+      - monitoring
+    command: >
+      --model google/gemma-4-31B-it
+      --gpu-memory-utilization 0.90
+      --tensor-parallel-size 2
+      --max-model-len 131072
+      --max-num-seqs 32
+      --enable-auto-tool-choice
+      --async-scheduling
+      --tool-call-parser gemma4
+      --reasoning-parser gemma4
+      --port 8000
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 500s
+
+  vllm-qwen36:
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "2,3"
+    image: vllm/vllm-openai:${VLLM_VERSION}
+    container_name: vllm-qwen36
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['2','3']
+              capabilities: [gpu]
+    volumes:
+      - hf_cache:/root/.cache/huggingface
+    networks:
+      - default
+      - monitoring
+    command: >
+      --model Qwen/Qwen3.6-27B-FP8
+      --gpu-memory-utilization 0.85
+      --tensor-parallel-size 2
+      --max-model-len 262144
+      --max-num-seqs 32
+      --reasoning-parser qwen3
+      --enable-auto-tool-choice
+      --tool-call-parser qwen3_coder
+      --port 8000
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 500s
+
   # Qwen3.5
   vllm-qwen:
     environment:
@@ -159,9 +242,6 @@ services:
     networks:
       - default
       - monitoring
-    depends_on:
-      speaches:
-        condition: service_healthy
     command: >
       --model Qwen/Qwen3-Embedding-4B
       --gpu-memory-utilization 0.12
@@ -270,18 +350,18 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      vllm-openai:
-        condition: service_started
-      vllm-qwen:
-        condition: service_started
-      vllm-embedding:
-        condition: service_started
-      speaches:
-        condition: service_started
-      sglang-diffusion:
-        condition: service_started
-      sglang-image-edit:
-        condition: service_started
+      # vllm-openai:
+      #   condition: service_started
+      # vllm-qwen:
+      #   condition: service_started
+      # vllm-embedding:
+      #   condition: service_started
+      # speaches:
+      #   condition: service_started
+      # sglang-diffusion:
+      #   condition: service_started
+      # sglang-image-edit:
+      #   condition: service_started
     environment:
       STORE_MODEL_IN_DB: "True"
       DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
