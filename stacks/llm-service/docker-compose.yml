@@ -33,50 +33,12 @@ services:
   # ---------------------------------------------------------------------------
   # vLLM
   # ---------------------------------------------------------------------------
-  # GPT-120b
-  vllm-openai:
-    environment:
-      NVIDIA_VISIBLE_DEVICES: "0,1"
-    image: vllm/vllm-openai:${VLLM_VERSION}
-    container_name: vllm-openai
-    restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: ['0', '1']
-              capabilities: [gpu]
-    volumes:
-      - hf_cache:/root/.cache/huggingface
-    networks:
-      - default
-      - monitoring
-    command: >
-      --model openai/gpt-oss-120b
-      --gpu-memory-utilization 0.80
-      --tensor-parallel-size 2
-      --max-model-len 32768
-      --max-num-seqs 256
-      --enable-auto-tool-choice
-      --tool-call-parser openai
-      --port 8000
-    logging:
-      driver: json-file
-      options:
-        max-size: "50m"
-        max-file: "3"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-      start_period: 500s
+
 
   # Gemma 4 31B it
   vllm-gemma:
     environment:
-      NVIDIA_VISIBLE_DEVICES: "2,3"
+      NVIDIA_VISIBLE_DEVICES: "2"
     image: vllm/vllm-openai:${VLLM_VERSION}
     container_name: vllm-gemma
     restart: unless-stopped
@@ -85,7 +47,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ['2', '3']
+              device_ids: ['2']
               capabilities: [gpu]
     
     volumes:
@@ -96,9 +58,9 @@ services:
     command: >
       --model google/gemma-4-31B-it
       --gpu-memory-utilization 0.90
-      --tensor-parallel-size 2
-      --max-model-len 131072
-      --max-num-seqs 32
+      --tensor-parallel-size 1
+      --max-model-len 65536
+      --max-num-seqs 16
       --enable-auto-tool-choice
       --async-scheduling
       --tool-call-parser gemma4
@@ -118,7 +80,7 @@ services:
 
   vllm-qwen36:
     environment:
-      NVIDIA_VISIBLE_DEVICES: "2,3"
+      NVIDIA_VISIBLE_DEVICES: "0,1"
     image: vllm/vllm-openai:${VLLM_VERSION}
     container_name: vllm-qwen36
     restart: unless-stopped
@@ -127,7 +89,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: ['2','3']
+              device_ids: ['0','1']
               capabilities: [gpu]
     volumes:
       - hf_cache:/root/.cache/huggingface
@@ -152,47 +114,6 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 500s
-
-  # Qwen3.5
-  vllm-qwen:
-    environment:
-      NVIDIA_VISIBLE_DEVICES: "2"
-    image: vllm/vllm-openai:${VLLM_VERSION}
-    container_name: vllm-qwen
-    restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: ['2']
-              capabilities: [gpu]
-    volumes:
-      - hf_cache:/root/.cache/huggingface
-    networks:
-      - default
-      - monitoring
-    command: >
-      --model Qwen/Qwen3.5-27B-FP8
-      --gpu-memory-utilization 0.85
-      --tensor-parallel-size 1
-      --max-model-len 32768
-      --max-num-seqs 256
-      --reasoning-parser qwen3
-      --enable-auto-tool-choice
-      --tool-call-parser qwen3_coder
-      --port 8001
-    logging:
-      driver: json-file
-      options:
-        max-size: "50m"
-        max-file: "3"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
-      interval: 10s
       timeout: 10s
       retries: 5
       start_period: 500s
@@ -247,14 +168,14 @@ services:
       --gpu-memory-utilization 0.12
       --max-model-len 8192
       --max-num-seqs 256
-      --port 8002
+      --port 8000
     logging:
       driver: json-file
       options:
         max-size: "50m"
         max-file: "3"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -285,7 +206,7 @@ services:
     command: >
       sglang serve
       --model-path Tongyi-MAI/Z-Image-Turbo
-      --port 8003
+      --port 8000
       --host 0.0.0.0
     logging:
       driver: json-file
@@ -293,7 +214,7 @@ services:
         max-size: "50m"
         max-file: "3"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -324,7 +245,7 @@ services:
     command: >
       sglang serve
       --model-path Qwen/Qwen-Image-Edit-2511
-      --port 8004
+      --port 8000
       --host 0.0.0.0
     logging:
       driver: json-file
@@ -332,7 +253,7 @@ services:
         max-size: "50m"
         max-file: "3"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 15s
       timeout: 10s
       retries: 5
