@@ -1,6 +1,6 @@
 # Terms of Service
 
-> **Service status:** Beta 
+> **Service status:** Closed Beta 
 > **Last updated:** 11th June 2026
 
 ---
@@ -20,7 +20,7 @@ Splinter is a self-hosted GPU inference platform operated by the [Accelerate Pro
 | Compute pods | Isolated GPU compute environments for vetted users with custom workloads         |
 | Engineer-mediated collaborations | Direct research partnership with an Accelerate engineer for substantive projects |
 
-Access to **inference endpoints** is available to all eligible users. Access to **pods** and **engineer collaborations** requires a separate application via the Expression of Interest process.
+As of the time of writing, access to **all services** requires an application via the Expression of Interest process.
 
 This is an open-source project. The infrastructure code and documentation are publicly available at [github.com/acceleratescience/splinter](https://github.com/acceleratescience/splinter).
 
@@ -32,7 +32,7 @@ Splinter is intended for:
 
 - Researchers, academic staff and PhD students at the University of Cambridge
 - Staff and RSEs developing tools and services for the Cambridge research community
-- Participants in Accelerate Programme-affiliated programmes (AI for Government cohort, AI ideas sprint, C2D3 and Accelerate awardees and similar)
+- Participants in Accelerate Programme events where Splinter is used (e.g. workshops, conferences)
 
 Access is not open to the general public. All users must apply via the Expression of Interest form or be invited to a specific workshop. The Accelerate team reserves the right to decline or revoke access at its discretion.
 
@@ -49,7 +49,7 @@ Access to Splinter's inference services is provided via API keys issued by the A
 
 ---
 
-## 4. Beta service - what to expect
+## 4. Closed beta service - what to expect
 
 Splinter is currently a **beta service**. By using it, you acknowledge:
 
@@ -57,9 +57,9 @@ Splinter is currently a **beta service**. By using it, you acknowledge:
 - There is no formal service-level agreement. Support is provided by a small engineering team alongside other commitments.
 - Models, endpoints and resource limits may be added, removed or altered without prior notice, though we will try to communicate changes via the user mailing list.
 - The service is grant-funded and continuity beyond the current funding period is not guaranteed. We will provide advance notice to active users if the service is to be wound down or significantly curtailed.
-- Disruptions are sometimes planned. Hands-on workshops and infrastructure work may require the service to be taken offline for periods of hours or days. These will be communicated via the mailing list where possible.
+- Service interruption may occur. Hands-on workshops and infrastructure work may require the service to be taken offline for periods of hours or days. These will be communicated via the mailing list where possible.
 
-If you have a workload that is time-sensitive or cannot tolerate interruption, plan accordingly.
+If you have a workload that is time-sensitive or cannot tolerate interruption, please discuss your requirements with the Accelerate team in the first instance.
 
 ---
 
@@ -69,7 +69,7 @@ If you have a workload that is time-sensitive or cannot tolerate interruption, p
 
 **What we do not log:** We do not log or store the content of your prompts or completions.
 
-**Splinter is not a certified secure environment.** It is not approved for processing restricted, sensitive, personal or otherwise regulated data (e.g. patient data, commercially confidential information, data subject to export controls). Do not send data to Splinter that you would not be comfortable processing on a shared, best-effort research system. If you are unsure whether your data is appropriate, contact us before using the service.
+**Splinter is not an ISO 27001 certified trusted research environment.** It is not approved for processing restricted, sensitive, personal or otherwise regulated data (e.g. patient data, commercially confidential information, data subject to export controls). Do not send data to Splinter that you would not be comfortable processing on a shared, best-effort research system. Users should independently ensure that they, their collaborators, and all funders are satisfied with data being stored in Splinter. If you are unsure whether your data is appropriate, contact us before using the service.
 
 **User data in compute pods is not backed up.** If you have been granted a pod allocation, you are responsible for maintaining your own backups of any data, model weights or outputs you store there. We accept no liability for data loss due to hardware failure, accidental deletion or service disruption.
 
@@ -93,6 +93,8 @@ Agentic coding tools (Claude Code, Cursor, GitHub Copilot Agent and similar syst
 - Configure your tools to limit scope and avoid unintended side effects.
 - Do not run agentic tools in a way that could affect other users' access (e.g. sustained high-volume generation that saturates shared resources).
 - Within pod environments, do not use agentic tools in ways that attempt to escalate privileges beyond your pod boundary.
+
+> **Warning:** violations of the above, particularly unauthorised privilege escalation or interference with other users' access, may constitute a criminal offence under the Computer Misuse Act 1990.
 
 We reserve the right to revoke access for agentic misuse even where the underlying intent was benign.
 
@@ -134,7 +136,7 @@ We may update these terms as the service evolves. Changes will be communicated v
 ## 10. Contact
 
 - **Bug reports and feature requests:** [GitHub Issues](https://github.com/acceleratescience/splinter/issues)
-- **Access requests and key management:** Email [accelerate-mle@cst.cam.ac.uk](mailto:accelerate-mle@cst.cam.ac.uk) or raise a GitHub Issue.
+- **Access requests and key management:** Email [accelerate-mle@cst.cam.ac.uk](mailto:accelerate-mle@cst.cam.ac.uk).
 - **Security concerns:** Email [accelerate-mle@cst.cam.ac.uk](mailto:accelerate-mle@cst.cam.ac.uk) directly. Please do not open a public GitHub issue for security matters.
 
 ---
