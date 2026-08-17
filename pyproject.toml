@@ -1,6 +1,7 @@
 [project]
 name = "splinter"
 version = "0.1.0"
+authors = [{name="Fin Griffin", email="fingriffin2023@outlook.com"}]
 description = "Add your description here"
 requires-python = ">=3.12"
 dependencies = [
